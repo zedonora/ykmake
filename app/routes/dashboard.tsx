@@ -19,7 +19,7 @@ export default function DashboardLayout() {
     return (
         <RootLayout isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
             <div className="container py-8">
-                <div className="bg-muted mb-8 rounded-lg overflow-hidden">
+                <div className="mb-8">
                     <DashboardNav />
                 </div>
                 <Outlet />

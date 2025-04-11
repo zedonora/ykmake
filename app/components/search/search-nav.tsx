@@ -4,24 +4,24 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import ClientOnly from "~/components/ui/client-only";
 
-interface DashboardNavProps {
+interface SearchNavProps {
     className?: string;
 }
 
-export function DashboardNav({ className }: DashboardNavProps) {
+export function SearchNav({ className }: SearchNavProps) {
     const location = useLocation();
     const [activeTab, setActiveTab] = useState("");
 
     useEffect(() => {
         const path = location.pathname;
-        if (path === "/dashboard") {
-            setActiveTab("overview");
-        } else if (path.includes("/dashboard/products")) {
+        if (path === "/search") {
+            setActiveTab("all");
+        } else if (path.includes("/search/products")) {
             setActiveTab("products");
-        } else if (path.includes("/dashboard/teams")) {
+        } else if (path.includes("/search/teams")) {
             setActiveTab("teams");
-        } else if (path.includes("/dashboard/activity")) {
-            setActiveTab("activity");
+        } else if (path.includes("/search/users")) {
+            setActiveTab("users");
         }
     }, [location]);
 
@@ -29,32 +29,32 @@ export function DashboardNav({ className }: DashboardNavProps) {
         <ClientOnly>
             <div className={cn("flex flex-wrap p-2 bg-muted rounded-lg", className)}>
                 <Button
-                    variant={activeTab === "overview" ? "default" : "ghost"}
+                    variant={activeTab === "all" ? "default" : "ghost"}
                     asChild
                     className="flex-1 justify-center"
                 >
-                    <Link to="/dashboard">개요</Link>
+                    <Link to="/search">전체</Link>
                 </Button>
                 <Button
                     variant={activeTab === "products" ? "default" : "ghost"}
                     asChild
                     className="flex-1 justify-center"
                 >
-                    <Link to="/dashboard/products">제품</Link>
+                    <Link to="/search/products">제품</Link>
                 </Button>
                 <Button
                     variant={activeTab === "teams" ? "default" : "ghost"}
                     asChild
                     className="flex-1 justify-center"
                 >
-                    <Link to="/dashboard/teams">팀</Link>
+                    <Link to="/search/teams">팀</Link>
                 </Button>
                 <Button
-                    variant={activeTab === "activity" ? "default" : "ghost"}
+                    variant={activeTab === "users" ? "default" : "ghost"}
                     asChild
                     className="flex-1 justify-center"
                 >
-                    <Link to="/dashboard/activity">활동</Link>
+                    <Link to="/search/users">사용자</Link>
                 </Button>
             </div>
         </ClientOnly>

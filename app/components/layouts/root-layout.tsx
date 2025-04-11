@@ -9,6 +9,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
 import { ChevronDown } from "lucide-react";
+import { CommandMenu } from "~/components/search/command-menu";
 
 interface RootLayoutProps {
     children: ReactNode;
@@ -133,6 +134,7 @@ export function RootLayout({
                         </nav>
                     </div>
                     <div className="flex items-center gap-4">
+                        <CommandMenu />
                         {isLoggedIn ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

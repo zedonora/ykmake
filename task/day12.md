@@ -463,59 +463,63 @@ export function getGrowthData(): GrowthData[] {
 
 ```typescript
 import { Link, useLocation } from "@remix-run/react";
-import { useEffect, useState } from "react";
 import { ClientOnly } from "remix-utils/client-only";
+import { useEffect, useState } from "react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
+import { Search } from "lucide-react";
 
-interface SettingsNavProps extends React.HTMLAttributes<HTMLElement> {}
+interface SettingsNavProps {
+  className?: string;
+}
 
 export function SettingsNav({ className }: SettingsNavProps) {
-    const location = useLocation();
-    const [activeTab, setActiveTab] = useState("overview");  // 기본값
-    
-    return (
-        <nav className={cn("flex p-2", className)}>
-            <ClientOnly>
-                {() => {
-                    useEffect(() => {
-                        const currentPath = location.pathname;
-                        
-                        if (currentPath.includes("/settings/account")) {
-                            setActiveTab("account");
-                        } else if (currentPath.includes("/settings/notifications")) {
-                            setActiveTab("notifications");
-                        } else {
-                            setActiveTab("overview");
-                        }
-                    }, [location.pathname]);
-                    
-                    return null;
-                }}
-            </ClientOnly>
+  const location = useLocation();
+  const [activeItem, setActiveItem] = useState("");
+
+  useEffect(() => {
+    if (location.pathname.includes("/settings/account")) {
+      setActiveItem("account");
+    } else if (location.pathname.includes("/settings/notifications")) {
+      setActiveItem("notifications");
+    } else if (location.pathname.includes("/settings/search")) {
+      setActiveItem("search");
+    }
+  }, [location]);
+
+  return (
+    <ClientOnly>
+      {() => (
+        <div className={cn("bg-muted p-1 rounded-lg mb-6", className)}>
+          <div className="flex">
             <Button
-                variant={activeTab === "overview" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
+              variant={activeItem === "account" ? "default" : "ghost"}
+              className="flex-1 justify-center"
+              asChild
             >
-                <Link to="/settings">개요</Link>
+              <Link to="/settings/account">계정</Link>
             </Button>
             <Button
-                variant={activeTab === "account" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
+              variant={activeItem === "notifications" ? "default" : "ghost"}
+              className="flex-1 justify-center"
+              asChild
             >
-                <Link to="/settings/account">계정 설정</Link>
+              <Link to="/settings/notifications">알림</Link>
             </Button>
             <Button
-                variant={activeTab === "notifications" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
+              variant={activeItem === "search" ? "default" : "ghost"}
+              size="icon"
+              asChild
             >
-                <Link to="/settings/notifications">알림 설정</Link>
+              <Link to="/settings/search" aria-label="설정 검색">
+                <Search className="h-4 w-4" />
+              </Link>
             </Button>
-        </nav>
-    );
+          </div>
+        </div>
+      )}
+    </ClientOnly>
+  );
 }
 ```
 
@@ -652,7 +656,7 @@ import { Outlet } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { ClientOnly } from "remix-utils/client-only";
 import { AdminNav } from "~/components/admin/admin-nav";
-import { RootLayout } from "~/components/root-layout";
+import { RootLayout } from "~/components/layouts/root-layout";
 
 export default function AdminLayout() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -783,90 +787,90 @@ export default function AccountSettings() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold mb-8">계정 설정</h1>
+        <h1 className="text-3xl font-bold mb-8">계정 설정</h1>
 
-      <div className="grid gap-6">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">기본 정보</h2>
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">이메일</Label>
-              <Input
-                id="email"
-                type="email"
+        <div className="grid gap-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">기본 정보</h2>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">이메일</Label>
+                <Input
+                  id="email"
+                  type="email"
                 value={settings.email}
-                disabled
-              />
-            </div>
+                  disabled
+                />
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="username">사용자명</Label>
-              <Input
-                id="username"
+              <div className="grid gap-2">
+                <Label htmlFor="username">사용자명</Label>
+                <Input
+                  id="username"
                 defaultValue={settings.username}
-              />
+                />
+              </div>
+
+              <Button>변경사항 저장</Button>
             </div>
+          </Card>
 
-            <Button>변경사항 저장</Button>
-          </div>
-        </Card>
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">보안</h2>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="current-password">현재 비밀번호</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                />
+              </div>
 
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">보안</h2>
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="current-password">현재 비밀번호</Label>
-              <Input
-                id="current-password"
-                type="password"
-              />
+              <div className="grid gap-2">
+                <Label htmlFor="new-password">새 비밀번호</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="confirm-password">비밀번호 확인</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                />
+              </div>
+
+              <Button>비밀번호 변경</Button>
+
+              <Separator className="my-6" />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="font-medium">2단계 인증</p>
+                  <p className="text-sm text-muted-foreground">
+                    로그인 시 추가 보안 코드를 요구합니다
+                  </p>
+                </div>
+              <Switch checked={settings.twoFactorEnabled} />
+              </div>
             </div>
+          </Card>
 
-            <div className="grid gap-2">
-              <Label htmlFor="new-password">새 비밀번호</Label>
-              <Input
-                id="new-password"
-                type="password"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">비밀번호 확인</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-              />
-            </div>
-
-            <Button>비밀번호 변경</Button>
-
-            <Separator className="my-6" />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">2단계 인증</p>
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4 text-destructive">위험 구역</h2>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="font-medium">계정 삭제</p>
                 <p className="text-sm text-muted-foreground">
-                  로그인 시 추가 보안 코드를 요구합니다
+                  계정을 삭제하면 모든 데이터가 영구적으로 제거됩니다
                 </p>
               </div>
-              <Switch checked={settings.twoFactorEnabled} />
+              <Button variant="destructive">계정 삭제</Button>
             </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4 text-destructive">위험 구역</h2>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="font-medium">계정 삭제</p>
-              <p className="text-sm text-muted-foreground">
-                계정을 삭제하면 모든 데이터가 영구적으로 제거됩니다
-              </p>
-            </div>
-            <Button variant="destructive">계정 삭제</Button>
-          </div>
-        </Card>
-      </div>
+          </Card>
+        </div>
     </>
   );
 }
@@ -881,129 +885,94 @@ export default function AccountSettings() {
 `app/routes/settings.notifications.tsx` 파일을 생성하고 다음과 같이 구현합니다:
 
 ```typescript
-import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-import { Card } from "~/components/ui/card";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import { Switch } from "~/components/ui/switch";
-import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
 import { getNotificationSettings } from "~/lib/data/mock-settings";
-import type { NotificationSettings } from "~/lib/types/settings";
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: "알림 설정 - YkMake" },
-    { name: "description", content: "YkMake 알림 설정을 관리하세요" },
-  ];
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const settings = await getNotificationSettings();
+  return json({ settings });
 };
 
-export async function loader() {
-  const settings = getNotificationSettings();
-  return { settings };
-}
-
-export default function NotificationSettings() {
+export default function NotificationsSettingsPage() {
   const { settings } = useLoaderData<typeof loader>();
 
   return (
-    <>
-      <h1 className="text-3xl font-bold mb-8">알림 설정</h1>
-
-      <div className="grid gap-6">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">이메일 알림</h2>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">알림 설정</h3>
+                  <p className="text-sm text-muted-foreground">
+          알림 수신 방법 및 유형을 관리하세요.
+                  </p>
+                </div>
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium">이메일 알림</h4>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">새 메시지</p>
-                <p className="text-sm text-muted-foreground">
-                  새로운 메시지가 도착하면 알림을 받습니다
-                </p>
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">마케팅 이메일</CardTitle>
+                    <Switch id="marketing" checked={settings.marketing} />
+                </div>
+                  <CardDescription>
+                    신규 기능, 서비스 및 특별 할인에 대한 이메일을 받습니다.
+                  </CardDescription>
               </div>
-              <Switch checked={settings.email.newMessage} />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">팀 초대</p>
-                <p className="text-sm text-muted-foreground">
-                  새로운 팀 초대가 있을 때 알림을 받습니다
-                </p>
+              </CardHeader>
+          </Card>
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">활동 알림</CardTitle>
+                    <Switch id="activity" checked={settings.activity} />
+                </div>
+                  <CardDescription>
+                    계정 활동 및 보안 업데이트에 대한 이메일을 받습니다.
+                  </CardDescription>
               </div>
-              <Switch checked={settings.email.teamInvite} />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">댓글</p>
-                <p className="text-sm text-muted-foreground">
-                  내 게시글에 새 댓글이 달리면 알림을 받습니다
-                </p>
-              </div>
-              <Switch checked={settings.email.comments} />
-            </div>
+              </CardHeader>
+          </Card>
           </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">푸시 알림</h2>
+        </div>
+            <div className="space-y-4">
+          <h4 className="text-sm font-medium">푸시 알림</h4>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">브라우저 알림</p>
-                <p className="text-sm text-muted-foreground">
-                  브라우저를 통해 실시간 알림을 받습니다
-                </p>
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">멘션</CardTitle>
+                    <Switch id="mentions" checked={settings.mentions} />
+                </div>
+                  <CardDescription>
+                    다른 사용자가 댓글에서 나를 멘션할 때 알림을 받습니다.
+                  </CardDescription>
               </div>
-              <Switch checked={settings.push.browser} />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">데스크톱 알림</p>
-                <p className="text-sm text-muted-foreground">
-                  데스크톱 앱을 통해 알림을 받습니다
-                </p>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">업데이트</CardTitle>
+                    <Switch id="updates" checked={settings.updates} />
+                </div>
+                  <CardDescription>
+                    제품 및 서비스 업데이트에 대한 알림을 받습니다.
+                  </CardDescription>
               </div>
-              <Switch checked={settings.push.desktop} />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">마케팅 알림</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">뉴스레터</p>
-                <p className="text-sm text-muted-foreground">
-                  주간 뉴스레터를 이메일로 받습니다
-                </p>
-              </div>
-              <Switch checked={settings.marketing.newsletter} />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">제품 업데이트</p>
-                <p className="text-sm text-muted-foreground">
-                  새로운 기능과 업데이트 소식을 받습니다
-                </p>
-              </div>
-              <Switch checked={settings.marketing.productUpdates} />
-            </div>
-          </div>
-        </Card>
+              </CardHeader>
+          </Card>
+        </div>
       </div>
-    </>
+      </div>
+    </div>
   );
 }
 ```
@@ -1244,7 +1213,7 @@ export default function UserManagement() {
 ```typescript
 import { Link, useLocation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { ClientOnly } from "remix-utils/client-only";
+import { ClientOnly } from "~/components/ui/client-only";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 
@@ -1252,194 +1221,192 @@ interface DashboardNavProps extends React.HTMLAttributes<HTMLElement> {}
 
 export function DashboardNav({ className }: DashboardNavProps) {
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState("overview");  // 기본값
-    
+    const [activeTab, setActiveTab] = useState("");
+
+    useEffect(() => {
+        const pathname = location.pathname;
+        if (pathname.includes("/dashboard/products")) {
+            setActiveTab("products");
+        } else if (pathname.includes("/dashboard/teams")) {
+            setActiveTab("teams");
+        } else if (pathname.includes("/dashboard/activity")) {
+            setActiveTab("activity");
+        } else {
+            setActiveTab("overview");
+        }
+    }, [location]);
+
     return (
-        <nav className={cn("flex p-2", className)}>
-            <ClientOnly>
-                {() => {
-                    useEffect(() => {
-                        const currentPath = location.pathname;
-                        
-                        if (currentPath.includes("/dashboard/products")) {
-                            setActiveTab("products");
-                        } else if (currentPath.includes("/dashboard/teams")) {
-                            setActiveTab("teams");
-                        } else if (currentPath.includes("/dashboard/activity")) {
-                            setActiveTab("activity");
-                        } else {
-                            setActiveTab("overview");
-                        }
-                    }, [location.pathname]);
-                    
-                    return null;
-                }}
-            </ClientOnly>
-            <Button
-                variant={activeTab === "overview" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
+        <ClientOnly>
+            <nav
+                className={cn(
+                    "flex items-center space-x-4 lg:space-x-6 bg-muted p-1 rounded-lg",
+                    className
+                )}
             >
-                <Link to="/dashboard">대시보드</Link>
-            </Button>
-            <Button
-                variant={activeTab === "products" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/dashboard/products">제품 분석</Link>
-            </Button>
-            <Button
-                variant={activeTab === "teams" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/dashboard/teams">팀 분석</Link>
-            </Button>
-            <Button
-                variant={activeTab === "activity" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/dashboard/activity">활동 분석</Link>
-            </Button>
-        </nav>
+                <Button
+                    asChild
+                    variant={activeTab === "overview" ? "default" : "ghost"}
+                    className="flex-1 justify-center"
+                >
+                    <Link to="/dashboard">개요</Link>
+                </Button>
+                <Button
+                    asChild
+                    variant={activeTab === "products" ? "default" : "ghost"}
+                    className="flex-1 justify-center"
+                >
+                    <Link to="/dashboard/products">제품</Link>
+                </Button>
+                <Button
+                    asChild
+                    variant={activeTab === "teams" ? "default" : "ghost"}
+                    className="flex-1 justify-center"
+                >
+                    <Link to="/dashboard/teams">팀</Link>
+                </Button>
+                <Button
+                    asChild
+                    variant={activeTab === "activity" ? "default" : "ghost"}
+                    className="flex-1 justify-center"
+                >
+                    <Link to="/dashboard/activity">활동</Link>
+                </Button>
+            </nav>
+        </ClientOnly>
     );
 }
 ```
 
-### 설정 네비게이션 컴포넌트 생성
+## 11. 설정 네비게이션 컴포넌트 구현
 
 `app/components/settings/settings-nav.tsx` 파일을 생성하고 다음과 같이 구현합니다:
 
 ```typescript
 import { Link, useLocation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { ClientOnly } from "remix-utils/client-only";
+import { ClientOnly } from "~/components/ui/client-only";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
+import { Search } from "lucide-react";
 
-interface SettingsNavProps extends React.HTMLAttributes<HTMLElement> {}
+interface SettingsNavProps {
+  className?: string;
+}
 
 export function SettingsNav({ className }: SettingsNavProps) {
-    const location = useLocation();
-    const [activeTab, setActiveTab] = useState("overview");  // 기본값
-    
-    useEffect(() => {
-        const currentPath = location.pathname;
-        
-        if (currentPath.includes("/settings/account")) {
-            setActiveTab("account");
-        } else if (currentPath.includes("/settings/notifications")) {
-            setActiveTab("notifications");
-        } else {
-            setActiveTab("overview");
-        }
-    }, [location.pathname]);
-    
-    return (
-        <nav className={cn("flex p-2", className)}>
-            <ClientOnly>
-                {() => {
-                    return null;
-                }}
-            </ClientOnly>
-            <Button
-                variant={activeTab === "overview" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/settings">개요</Link>
-            </Button>
-            <Button
-                variant={activeTab === "account" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/settings/account">계정 설정</Link>
-            </Button>
-            <Button
-                variant={activeTab === "notifications" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/settings/notifications">알림 설정</Link>
-            </Button>
-        </nav>
-    );
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState("");
+
+  useEffect(() => {
+    if (location.pathname.includes("/settings/account")) {
+      setActiveTab("account");
+    } else if (location.pathname.includes("/settings/notifications")) {
+      setActiveTab("notifications");
+    } else {
+      setActiveTab("overview");
+    }
+  }, [location]);
+
+  return (
+    <ClientOnly>
+      <nav
+        className={cn(
+          "flex items-center space-x-4 lg:space-x-6 bg-muted p-1 rounded-lg",
+          className
+        )}
+      >
+        <Button
+          asChild
+          variant={activeTab === "overview" ? "default" : "ghost"}
+          className="flex-1 justify-center"
+        >
+          <Link to="/settings">개요</Link>
+        </Button>
+        <Button
+          asChild
+          variant={activeTab === "account" ? "default" : "ghost"}
+          className="flex-1 justify-center"
+        >
+          <Link to="/settings/account">계정</Link>
+        </Button>
+        <Button
+          asChild
+          variant={activeTab === "notifications" ? "default" : "ghost"}
+          className="flex-1 justify-center"
+        >
+          <Link to="/settings/notifications">알림</Link>
+        </Button>
+      </nav>
+    </ClientOnly>
+  );
 }
 ```
 
-### 관리자 네비게이션 컴포넌트 생성
+## 12. 관리자 네비게이션 컴포넌트 구현
 
 `app/components/admin/admin-nav.tsx` 파일을 생성하고 다음과 같이 구현합니다:
 
 ```typescript
 import { Link, useLocation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { ClientOnly } from "remix-utils/client-only";
+import { ClientOnly } from "~/components/ui/client-only";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 
-interface AdminNavProps extends React.HTMLAttributes<HTMLElement> {}
+interface AdminNavProps {
+  className?: string;
+}
 
 export function AdminNav({ className }: AdminNavProps) {
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState("overview");  // 기본값
-    
+    const [activeTab, setActiveTab] = useState("");
+
+    useEffect(() => {
+        const pathname = location.pathname;
+        if (pathname.includes("/admin/users")) {
+            setActiveTab("users");
+        } else {
+            setActiveTab("dashboard");
+        }
+    }, [location]);
+
     return (
-        <nav className={cn("flex p-2", className)}>
-            <ClientOnly>
-                {() => {
-                    useEffect(() => {
-                        const currentPath = location.pathname;
-                        
-                        if (currentPath.includes("/admin.dashboard")) {
-                            setActiveTab("dashboard");
-                        } else if (currentPath.includes("/admin.users")) {
-                            setActiveTab("users");
-                        } else {
-                            setActiveTab("overview");
-                        }
-                    }, [location.pathname]);
-                    
-                    return null;
-                }}
-            </ClientOnly>
-            <Button
-                variant={activeTab === "overview" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
+        <ClientOnly>
+            <nav
+                className={cn(
+                    "flex items-center space-x-4 lg:space-x-6 bg-muted p-1 rounded-lg",
+                    className
+                )}
             >
-                <Link to="/admin">개요</Link>
-            </Button>
-            <Button
-                variant={activeTab === "dashboard" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/admin.dashboard">대시보드</Link>
-            </Button>
-            <Button
-                variant={activeTab === "users" ? "default" : "ghost"}
-                className="flex-1 justify-center"
-                asChild
-            >
-                <Link to="/admin.users">사용자 관리</Link>
-            </Button>
-        </nav>
+                <Button
+                    asChild
+                    variant={activeTab === "dashboard" ? "default" : "ghost"}
+                    className="flex-1 justify-center"
+                >
+                    <Link to="/admin/dashboard">대시보드</Link>
+                </Button>
+                <Button
+                    asChild
+                    variant={activeTab === "users" ? "default" : "ghost"}
+                    className="flex-1 justify-center"
+                >
+                    <Link to="/admin/users">사용자</Link>
+                </Button>
+            </nav>
+        </ClientOnly>
     );
 }
 ```
 
-### 설정 레이아웃 컴포넌트 수정
+## 13. 설정 레이아웃 컴포넌트 수정
 
 `app/routes/settings.tsx` 파일을 수정합니다:
 
 ```typescript
 import { Outlet } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { ClientOnly } from "remix-utils/client-only";
+import { ClientOnly } from "~/components/ui/client-only";
 import { SettingsNav } from "~/components/settings/settings-nav";
 import { RootLayout } from "~/components/layouts/root-layout";
 
@@ -1468,9 +1435,9 @@ export default function SettingsLayout() {
                     <SettingsNav />
                 </div>
                 <Outlet />
-            </div>
-        </RootLayout>
-    );
+      </div>
+    </RootLayout>
+  );
 }
 ```
 
@@ -1493,7 +1460,7 @@ export default function SettingsLayout() {
 ```typescript
 import { Outlet } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { ClientOnly } from "remix-utils/client-only";
+import { ClientOnly } from "~/components/ui/client-only";
 import { RootLayout } from "~/components/layouts/root-layout";
 import { ProfileSettingsNav } from "~/components/profile/profile-settings-nav";
 
@@ -1548,4 +1515,14 @@ export default function ProfileSettingsLayout() {
 3. 관리자 페이지:
    - `/admin` - 관리자 인덱스 페이지
    - `/admin/dashboard` - 관리자 대시보드
-   - `/admin/users` - 사용자 관리 페이지
+   - `/admin/users` - 사용자 관리
+
+## 접근 가능한 URL 목록
+
+1. `/settings` - 설정 메인 페이지 (탭 네비게이션 및 인덱스)
+2. `/settings/account` - 계정 설정
+3. `/settings/notifications` - 알림 설정
+4. `/settings/search` - 설정 검색
+5. `/admin` - 관리자 메인 페이지 (탭 네비게이션 및 인덱스)
+6. `/admin/dashboard` - 관리자 대시보드
+7. `/admin/users` - 사용자 관리

@@ -1,21 +1,25 @@
 export interface AccountSettings {
-    email: string;
     username: string;
-    twoFactorEnabled: boolean;
+    email: string;
+    name: string;
+    bio: string;
+    language: string;
+    theme: string;
 }
 
 export interface NotificationSettings {
-    email: {
-        newMessage: boolean;
-        teamInvite: boolean;
-        comments: boolean;
-    };
-    push: {
-        browser: boolean;
-        desktop: boolean;
-    };
-    marketing: {
-        newsletter: boolean;
-        productUpdates: boolean;
-    };
+    email: boolean;
+    push: boolean;
+    marketing: boolean;
+    activity: boolean;
+    mentions: boolean;
+    updates: boolean;
+}
+
+export interface SettingResult {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    path: string;
 }
