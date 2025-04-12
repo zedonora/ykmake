@@ -22,43 +22,38 @@ export async function action({ request }: ActionFunctionArgs) {
     const user = await requireUser(request);
     const formData = await request.formData();
 
-    const name = formData.get("name");
+    const title = formData.get("title");
     const description = formData.get("description");
     const category = formData.get("category");
-    const maxMembers = formData.get("maxMembers");
-    const openPositions = formData.get("openPositions");
-    const tags = formData.get("tags");
+    const image = formData.get("image");
 
     if (
-        typeof name !== "string" ||
+        typeof title !== "string" ||
         typeof description !== "string" ||
         typeof category !== "string"
     ) {
         return new Response(
-            JSON.stringify({ errors: { name: "유효하지 않은 입력입니다" } }),
+            JSON.stringify({ errors: { title: "유효하지 않은 입력입니다" } }),
             { status: 400, headers: { "Content-Type": "application/json" } }
         );
     }
 
-    const team = await prisma.team.create({
+    const product = await prisma.product.create({
         data: {
-            name,
+            title,
             description,
             category,
-            status: "recruiting",
-            members: {
-                create: {
-                    userId: user.id,
-                    role: "OWNER",
-                },
+            image: typeof image === "string" ? image : undefined,
+            author: {
+                connect: { id: user.id },
             },
         },
     });
 
-    return redirect(`/teams/${team.id}`);
+    return redirect(`/products/${product.id}`);
 }
 
-export default function NewTeamPage() {
+export default function NewProductPage() {
     const actionData = useActionData<typeof action>();
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
@@ -66,37 +61,37 @@ export default function NewTeamPage() {
     return (
         <>
             <PageHeader
-                title="팀 만들기"
-                description="새로운 프로젝트를 위한 팀을 구성해보세요"
+                title="제품 등록"
+                description="YkMake 커뮤니티에 새로운 제품을 등록해보세요"
             />
 
             <Section>
                 <Card>
                     <CardHeader>
-                        <CardTitle>팀 정보</CardTitle>
+                        <CardTitle>제품 정보</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Form method="post" className="space-y-6">
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="name">팀 이름</Label>
+                                    <Label htmlFor="title">제품명</Label>
                                     <Input
-                                        id="name"
-                                        name="name"
-                                        placeholder="팀 이름을 입력하세요"
+                                        id="title"
+                                        name="title"
+                                        placeholder="제품 이름을 입력하세요"
                                         required
                                     />
-                                    {actionData?.errors?.name && (
-                                        <p className="text-sm text-red-500 mt-1">{actionData.errors.name}</p>
+                                    {actionData?.errors?.title && (
+                                        <p className="text-sm text-red-500 mt-1">{actionData.errors.title}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="description">팀 소개</Label>
+                                    <Label htmlFor="description">설명</Label>
                                     <Textarea
                                         id="description"
                                         name="description"
-                                        placeholder="팀과 프로젝트에 대한 설명을 입력하세요"
+                                        placeholder="제품에 대한 설명을 입력하세요"
                                         rows={5}
                                         required
                                     />
@@ -120,41 +115,18 @@ export default function NewTeamPage() {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="maxMembers">최대 팀원 수</Label>
+                                    <Label htmlFor="image">이미지 URL (선택사항)</Label>
                                     <Input
-                                        id="maxMembers"
-                                        name="maxMembers"
-                                        type="number"
-                                        min="2"
-                                        defaultValue="5"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="openPositions">모집 포지션</Label>
-                                    <Textarea
-                                        id="openPositions"
-                                        name="openPositions"
-                                        placeholder="모집하는 포지션을 한 줄에 하나씩 입력하세요 (예: 프론트엔드 개발자 - 1명)"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="tags">기술 스택</Label>
-                                    <Input
-                                        id="tags"
-                                        name="tags"
-                                        placeholder="쉼표로 구분하여 입력하세요 (예: React, TypeScript, Node.js)"
-                                        required
+                                        id="image"
+                                        name="image"
+                                        placeholder="제품 이미지 URL"
                                     />
                                 </div>
                             </div>
 
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" type="button" asChild>
-                                    <a href="/teams">취소</a>
+                                    <a href="/products">취소</a>
                                 </Button>
                                 <Button type="submit" disabled={isSubmitting}>
                                     {isSubmitting ? "등록 중..." : "등록하기"}

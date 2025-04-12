@@ -20,6 +20,20 @@ export default function AdminLayout() {
         if (adminState !== "true") {
             navigate("/");
         }
+
+        // 로그아웃 이벤트 리스너 추가
+        const handleLogout = () => {
+            setIsLoggedIn(false);
+            setIsAdmin(false);
+            navigate("/");
+        };
+
+        window.addEventListener('logoutEvent', handleLogout);
+
+        // 컴포넌트 언마운트 시 이벤트 리스너 제거
+        return () => {
+            window.removeEventListener('logoutEvent', handleLogout);
+        };
     }, [navigate]);
 
     // 관리자가 아닌 경우 접근 거부 메시지 표시

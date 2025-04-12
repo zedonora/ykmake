@@ -48,7 +48,7 @@ export default function Index() {
           </Button>
         )}
       </div>
-      <RootLayout isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
+      <RootLayout isLoggedIn={isLoggedIn} isAdmin={isAdmin} hideLoginButton={true}>
         {/* 히어로 섹션 */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 z-0" />

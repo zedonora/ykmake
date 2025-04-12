@@ -1,7 +1,9 @@
+'use client';
+
 import { useEffect, useState, type ReactNode } from "react";
 
 interface ClientOnlyProps {
-    children: ReactNode;
+    children: ReactNode | (() => ReactNode);
     fallback?: ReactNode;
 }
 
@@ -13,11 +15,15 @@ export default function ClientOnly({
     children,
     fallback = null,
 }: ClientOnlyProps) {
-    const [isClient, setIsClient] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setIsClient(true);
+        setMounted(true);
     }, []);
 
-    return isClient ? children : fallback;
+    if (!mounted) {
+        return <>{fallback}</>;
+    }
+
+    return <>{typeof children === 'function' ? children() : children}</>;
 } 

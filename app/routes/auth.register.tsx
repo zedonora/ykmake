@@ -1,10 +1,13 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import type { MetaFunction, ActionFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
+import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
+import { register, createUserSession } from "~/utils/session.server";
+import { prisma } from "~/utils/api.server";
 
 export const meta: MetaFunction = () => {
     return [
@@ -13,7 +16,52 @@ export const meta: MetaFunction = () => {
     ];
 };
 
+export async function action({ request }: ActionFunctionArgs) {
+    const formData = await request.formData();
+    const email = formData.get("email");
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirm-password");
+    const name = formData.get("name") || email;
+
+    if (
+        typeof email !== "string" ||
+        typeof password !== "string" ||
+        typeof confirmPassword !== "string"
+    ) {
+        return new Response(
+            JSON.stringify({ errors: { email: "유효하지 않은 입력입니다" } }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    if (password !== confirmPassword) {
+        return new Response(
+            JSON.stringify({ errors: { password: "비밀번호가 일치하지 않습니다" } }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    // 이메일 중복 체크
+    const existingUser = await prisma.user.findUnique({
+        where: { email },
+    });
+
+    if (existingUser) {
+        return new Response(
+            JSON.stringify({ errors: { email: "이미 사용 중인 이메일입니다" } }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    const user = await register({ email, password, name: name.toString() });
+    return createUserSession(user.id, "/dashboard");
+}
+
 export default function Register() {
+    const actionData = useActionData<typeof action>();
+    const navigation = useNavigation();
+    const isSubmitting = navigation.state === "submitting";
+
     return (
         <div className="container flex h-screen w-screen flex-col items-center justify-center">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
@@ -27,36 +75,45 @@ export default function Register() {
                 </div>
 
                 <Card className="p-6">
-                    <form className="space-y-4">
+                    <Form method="post" className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email">이메일</Label>
                             <Input
                                 id="email"
+                                name="email"
                                 type="email"
                                 placeholder="name@example.com"
                                 required
                             />
+                            {actionData?.errors?.email && (
+                                <p className="text-sm text-red-500 mt-1">{actionData.errors.email}</p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">비밀번호</Label>
                             <Input
                                 id="password"
+                                name="password"
                                 type="password"
                                 required
                             />
+                            {actionData?.errors?.password && (
+                                <p className="text-sm text-red-500 mt-1">{actionData.errors.password}</p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="confirm-password">비밀번호 확인</Label>
                             <Input
                                 id="confirm-password"
+                                name="confirm-password"
                                 type="password"
                                 required
                             />
                         </div>
-                        <Button className="w-full" type="submit">
-                            회원가입
+                        <Button className="w-full" type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "가입 중..." : "회원가입"}
                         </Button>
-                    </form>
+                    </Form>
 
                     <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">

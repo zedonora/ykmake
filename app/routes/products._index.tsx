@@ -1,17 +1,51 @@
 import { useLoaderData } from "@remix-run/react";
-import { getFeaturedProducts, getLatestProducts, getAllCategories } from "~/lib/data/mock-products";
-import { Product } from "~/lib/types/product";
+import { Link } from "@remix-run/react";
+import { ArrowRight } from "lucide-react";
 import { PageHeader } from "~/components/layouts/page-header";
 import { Section } from "~/components/layouts/section";
 import { ProductCard } from "~/components/cards/product-card";
 import { Button } from "~/components/ui/button";
-import { Link } from "@remix-run/react";
-import { ArrowRight } from "lucide-react";
+import { prisma } from "~/utils/api.server";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 
-export async function loader() {
-    const featuredProducts = getFeaturedProducts();
-    const latestProducts = getLatestProducts(6);
-    const allCategories = getAllCategories();
+export async function loader({ request }: LoaderFunctionArgs) {
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
+    const sort = url.searchParams.get("sort") || "latest";
+
+    // 모든 카테고리 가져오기
+    const categoriesResult = await prisma.product.groupBy({
+        by: ['category'],
+    });
+    const allCategories = categoriesResult.map(item => item.category);
+
+    // 주목할 제품 (인기 제품) 가져오기
+    const featuredProducts = await prisma.product.findMany({
+        take: 3,
+        orderBy: { views: 'desc' },
+        include: {
+            author: {
+                select: { name: true },
+            },
+            _count: {
+                select: { likes: true, comments: true },
+            },
+        },
+    });
+
+    // 최신 제품 가져오기
+    const latestProducts = await prisma.product.findMany({
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        include: {
+            author: {
+                select: { name: true },
+            },
+            _count: {
+                select: { likes: true, comments: true },
+            },
+        },
+    });
 
     return Response.json({
         featuredProducts,
@@ -31,7 +65,7 @@ export default function ProductsIndexPage() {
             >
                 <div className="flex gap-4">
                     <Button asChild>
-                        <Link to="/products/submit">제품 등록하기</Link>
+                        <Link to="/products/new">제품 등록하기</Link>
                     </Button>
                 </div>
             </PageHeader>
@@ -46,8 +80,18 @@ export default function ProductsIndexPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {featuredProducts.map((product: Product) => (
-                            <ProductCard key={product.id} {...product} />
+                        {featuredProducts.map((product) => (
+                            <ProductCard key={product.id}
+                                id={product.id}
+                                title={product.title}
+                                description={product.description}
+                                category={product.category}
+                                views={product.views}
+                                author={product.author.name}
+                                comments={product._count.comments}
+                                likes={product._count.likes}
+                                image={product.image || undefined}
+                            />
                         ))}
                     </div>
                 </Section>
@@ -62,8 +106,18 @@ export default function ProductsIndexPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {latestProducts.map((product: Product) => (
-                        <ProductCard key={product.id} {...product} />
+                    {latestProducts.map((product) => (
+                        <ProductCard key={product.id}
+                            id={product.id}
+                            title={product.title}
+                            description={product.description}
+                            category={product.category}
+                            views={product.views}
+                            author={product.author.name}
+                            comments={product._count.comments}
+                            likes={product._count.likes}
+                            image={product.image || undefined}
+                        />
                     ))}
                 </div>
             </Section>
@@ -72,7 +126,7 @@ export default function ProductsIndexPage() {
                 <h2 className="text-2xl font-bold mb-6">카테고리별 탐색</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {allCategories.map((category: string) => (
+                    {allCategories.map((category) => (
                         <Link
                             key={category}
                             to={`/products/categories/${category.toLowerCase()}`}

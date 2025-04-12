@@ -14,6 +14,19 @@ export default function SettingsLayout() {
 
         setIsLoggedIn(loginState === "true");
         setIsAdmin(adminState === "true");
+
+        // 로그아웃 이벤트 리스너 추가
+        const handleLogout = () => {
+            setIsLoggedIn(false);
+            setIsAdmin(false);
+        };
+
+        window.addEventListener('logoutEvent', handleLogout);
+
+        // 컴포넌트 언마운트 시 이벤트 리스너 제거
+        return () => {
+            window.removeEventListener('logoutEvent', handleLogout);
+        };
     }, []);
 
     return (

@@ -15,12 +15,14 @@ interface RootLayoutProps {
     children: ReactNode;
     isLoggedIn?: boolean;
     isAdmin?: boolean;
+    hideLoginButton?: boolean;
 }
 
 export function RootLayout({
     children,
     isLoggedIn = false,
     isAdmin: propIsAdmin,
+    hideLoginButton = false,
 }: RootLayoutProps) {
     const location = useLocation();
     const isActive = (path: string) => location.pathname.startsWith(path);
@@ -151,10 +153,13 @@ export function RootLayout({
                                         <Link to="/profile/settings/notifications">알림 설정</Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
-                                        <Link to="/" onClick={() => {
+                                        <Link to="/" onClick={(e) => {
+                                            e.preventDefault();
                                             if (typeof window !== "undefined") {
                                                 localStorage.setItem("isLoggedIn", "false");
-                                                window.location.reload();
+                                                localStorage.setItem("isAdmin", "false");
+                                                setIsAdmin(false);
+                                                window.dispatchEvent(new Event('logoutEvent'));
                                             }
                                         }}>
                                             로그아웃
@@ -163,9 +168,11 @@ export function RootLayout({
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
-                            <Button asChild>
-                                <Link to="/auth/login">로그인</Link>
-                            </Button>
+                            !hideLoginButton && (
+                                <Button asChild>
+                                    <Link to="/auth/login">로그인</Link>
+                                </Button>
+                            )
                         )}
                     </div>
                 </div>

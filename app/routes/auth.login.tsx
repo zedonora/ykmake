@@ -1,10 +1,12 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import type { MetaFunction, ActionFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
+import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
+import { login, createUserSession } from "~/utils/session.server";
 
 export const meta: MetaFunction = () => {
     return [
@@ -13,7 +15,39 @@ export const meta: MetaFunction = () => {
     ];
 };
 
+export async function action({ request }: ActionFunctionArgs) {
+    const formData = await request.formData();
+    const email = formData.get("email");
+    const password = formData.get("password");
+    const redirectTo = formData.get("redirectTo") || "/dashboard";
+
+    if (
+        typeof email !== "string" ||
+        typeof password !== "string" ||
+        typeof redirectTo !== "string"
+    ) {
+        return new Response(
+            JSON.stringify({ errors: { email: "유효하지 않은 입력입니다" } }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    const user = await login({ email, password });
+    if (!user) {
+        return new Response(
+            JSON.stringify({ errors: { email: "이메일 또는 비밀번호가 올바르지 않습니다" } }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    return createUserSession(user.id, redirectTo);
+}
+
 export default function Login() {
+    const actionData = useActionData<typeof action>();
+    const navigation = useNavigation();
+    const isSubmitting = navigation.state === "submitting";
+
     return (
         <div className="container flex h-screen w-screen flex-col items-center justify-center">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
@@ -27,28 +61,33 @@ export default function Login() {
                 </div>
 
                 <Card className="p-6">
-                    <form className="space-y-4">
+                    <Form method="post" className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email">이메일</Label>
                             <Input
                                 id="email"
+                                name="email"
                                 type="email"
                                 placeholder="name@example.com"
                                 required
                             />
+                            {actionData?.errors?.email && (
+                                <p className="text-sm text-red-500 mt-1">{actionData.errors.email}</p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">비밀번호</Label>
                             <Input
                                 id="password"
+                                name="password"
                                 type="password"
                                 required
                             />
                         </div>
-                        <Button className="w-full" type="submit">
-                            로그인
+                        <Button className="w-full" type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "로그인 중..." : "로그인"}
                         </Button>
-                    </form>
+                    </Form>
 
                     <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
