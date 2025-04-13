@@ -4,6 +4,26 @@
 
 오늘은 YkMake의 배포를 위한 준비 작업을 진행합니다. 프로덕션 환경에서 안정적으로 서비스를 운영하기 위한 설정을 구성합니다.
 
+## 파일 생성 명령어
+
+다음 명령어를 실행하여 필요한 파일들을 생성합니다:
+
+```bash
+# 환경 변수 관련 파일
+touch .env.example
+touch app/utils/env.server.ts
+
+# 보안 및 성능 최적화 관련 파일
+touch app/utils/image.server.ts
+touch app/utils/cache.server.ts
+
+# 배포 관련 파일
+touch Dockerfile
+touch docker-compose.yml
+mkdir -p .github/workflows
+touch .github/workflows/deploy.yml
+```
+
 ## 작업 목록
 
 1. 환경 변수 설정
@@ -34,10 +54,14 @@ KAKAO_CLIENT_ID=your-kakao-client-id
 KAKAO_CLIENT_SECRET=your-kakao-client-secret
 
 # Storage
-AWS_ACCESS_KEY_ID=your-aws-access-key-id
-AWS_SECRET_ACCESS_KEY=your-aws-secret-access-key
-AWS_REGION=ap-northeast-2
-S3_BUCKET=your-s3-bucket-name
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_REGION=us-east-1
+S3_BUCKET=ykmake
+MINIO_ENDPOINT=http://localhost:9000
+
+# Cache
+REDIS_URL=redis://localhost:6379
 
 # Email
 SMTP_HOST=smtp.gmail.com
@@ -75,6 +99,9 @@ export const ENV = {
   AWS_SECRET_ACCESS_KEY: getEnvVar("AWS_SECRET_ACCESS_KEY"),
   AWS_REGION: getEnvVar("AWS_REGION"),
   S3_BUCKET: getEnvVar("S3_BUCKET"),
+  MINIO_ENDPOINT: getEnvVar("MINIO_ENDPOINT"),
+  
+  REDIS_URL: getEnvVar("REDIS_URL"),
   
   SMTP_HOST: getEnvVar("SMTP_HOST"),
   SMTP_PORT: getEnvVar("SMTP_PORT"),
@@ -90,24 +117,29 @@ export const ENV = {
 `app/entry.server.tsx` 파일을 수정하여 보안 헤더를 추가합니다:
 
 ```typescript
-import { PassThrough } from "stream";
-import {
-  createReadableStreamFromReadable,
-  type EntryContext,
-} from "@remix-run/node";
+/**
+ * By default, Remix will handle generating the HTTP Response for you.
+ * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
+ * For more information, see https://remix.run/file-conventions/entry.server
+ */
+
+import { PassThrough } from "node:stream";
+
+import type { AppLoadContext, EntryContext } from "@remix-run/node";
+import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
-import { getEnv } from "./utils/env.server";
+import { ENV } from "./utils/env.server";
 
-const ABORT_DELAY = 5000;
+const ABORT_DELAY = 5_000;
 
 // 보안 헤더 설정
 const securityHeaders = {
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
   "X-XSS-Protection": "1; mode=block",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Referrer-Policy": ENV.NODE_ENV === "production" ? "strict-origin-when-cross-origin" : "no-referrer-when-downgrade",
   "Content-Security-Policy":
     "default-src 'self'; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
@@ -122,28 +154,130 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
+  // This is ignored so we can keep it in the template for visibility.  Feel
+  // free to delete this parameter in your app if you're not using it!
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  loadContext: AppLoadContext
 ) {
   // 보안 헤더 추가
   Object.entries(securityHeaders).forEach(([key, value]) => {
     responseHeaders.set(key, value);
   });
 
-  return isbot(request.headers.get("user-agent"))
+  return isbot(request.headers.get("user-agent") || "")
     ? handleBotRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        remixContext,
-      )
+      request,
+      responseStatusCode,
+      responseHeaders,
+      remixContext
+    )
     : handleBrowserRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        remixContext,
-      );
+      request,
+      responseStatusCode,
+      responseHeaders,
+      remixContext
+    );
 }
 
-// ... 기존 코드 ...
+function handleBotRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  remixContext: EntryContext
+) {
+  return new Promise((resolve, reject) => {
+    let shellRendered = false;
+    const { pipe, abort } = renderToPipeableStream(
+      <RemixServer
+        context={remixContext}
+        url={request.url}
+        abortDelay={ABORT_DELAY}
+      />,
+      {
+        onAllReady() {
+          shellRendered = true;
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
+
+          responseHeaders.set("Content-Type", "text/html");
+
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            })
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error);
+          }
+        },
+      }
+    );
+
+    setTimeout(abort, ABORT_DELAY);
+  });
+}
+
+function handleBrowserRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  remixContext: EntryContext
+) {
+  return new Promise((resolve, reject) => {
+    let shellRendered = false;
+    const { pipe, abort } = renderToPipeableStream(
+      <RemixServer
+        context={remixContext}
+        url={request.url}
+        abortDelay={ABORT_DELAY}
+      />,
+      {
+        onShellReady() {
+          shellRendered = true;
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
+
+          responseHeaders.set("Content-Type", "text/html");
+
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            })
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error);
+          }
+        },
+      }
+    );
+
+    setTimeout(abort, ABORT_DELAY);
+  });
+}
 ```
 
 ## 3. 성능 최적화
@@ -163,6 +297,9 @@ const s3 = new S3Client({
     accessKeyId: ENV.AWS_ACCESS_KEY_ID,
     secretAccessKey: ENV.AWS_SECRET_ACCESS_KEY,
   },
+  endpoint: ENV.MINIO_ENDPOINT,
+  forcePathStyle: true, // MinIO에서는 path style URL 사용
+  tls: false, // MinIO에서 HTTP 사용 시 필요 (기본값은 true)
 });
 
 export async function optimizeAndUploadImage(
@@ -187,7 +324,8 @@ export async function optimizeAndUploadImage(
     }),
   );
 
-  return `https://${ENV.S3_BUCKET}.s3.${ENV.AWS_REGION}.amazonaws.com/${key}`;
+  // MinIO에서 사용하는 URL 형식 (https를 사용하지 않을 경우)
+  return `${ENV.MINIO_ENDPOINT}/${ENV.S3_BUCKET}/${key}`;
 }
 ```
 
@@ -274,8 +412,6 @@ CMD ["npm", "start"]
 `docker-compose.yml` 파일을 생성하고 다음과 같이 구현합니다:
 
 ```yaml
-version: '3.8'
-
 services:
   app:
     build: .
@@ -285,9 +421,15 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://user:password@db:5432/ykmake
       - REDIS_URL=redis://cache:6379
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_REGION=us-east-1
+      - S3_BUCKET=ykmake
+      - MINIO_ENDPOINT=http://minio:9000
     depends_on:
       - db
       - cache
+      - minio
 
   db:
     image: postgres:14-alpine
@@ -303,9 +445,43 @@ services:
     volumes:
       - redis_data:/data
 
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    command: server --console-address ":9001" /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # MinIO 초기화를 위한 서비스
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/ykmake || true;
+      /usr/bin/mc policy set public myminio/ykmake;
+      echo 'MinIO 초기화 완료';
+      exit 0;
+      "
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
 ```
 
 ### GitHub Actions 워크플로우
@@ -377,4 +553,3 @@ docker-compose logs -f
 - 캐시 시스템
 - Docker 컨테이너화
 - CI/CD 파이프라인
-``` 
