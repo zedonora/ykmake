@@ -523,4 +523,150 @@ npx prisma studio
 - 투어 가이드를 통한 사용성 개선
 - 접근성 준수 및 개선
 - 사용자 행동 분석 시스템
-``` 
+
+## 3. 서버 사이드 유틸리티
+
+### API 유틸리티 구현
+
+`app/utils/api.server.ts` 파일을 생성하고 다음과 같이 구현합니다:
+
+```typescript
+import { redirect } from "@remix-run/node";
+import { getUserById, requireAdmin } from "~/models/user.server";
+import { getSession } from "./session.server";
+
+export async function requireUserId(request: Request) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
+  
+  if (!userId) {
+    throw new Response(JSON.stringify({ message: "로그인이 필요합니다" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  }
+  
+  return userId;
+}
+
+export async function requireUser(request: Request) {
+  const userId = await requireUserId(request);
+  const user = await getUserById(userId);
+  
+  if (!user) {
+    throw new Response(JSON.stringify({ message: "사용자를 찾을 수 없습니다" }), {
+      status: 404,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  }
+  
+  return user;
+}
+
+export async function requireUserWithAdmin(request: Request) {
+  const user = await requireUser(request);
+  const isAdmin = await requireAdmin(user.id);
+  
+  if (!isAdmin) {
+    throw new Response(JSON.stringify({ message: "관리자 권한이 필요합니다" }), {
+      status: 403,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  }
+  
+  return user;
+}
+
+export function redirectIfLoggedIn(request: Request, redirectTo: string) {
+  const session = getSession(request.headers.get("Cookie"));
+  if (session.has("userId")) {
+    return redirect(redirectTo);
+  }
+  return null;
+}
+```
+
+### 알림 시스템 구현
+
+`app/utils/alert.server.ts` 파일을 생성하고 다음과 같이 구현합니다:
+
+```typescript
+import { prisma } from "~/db.server";
+import { ENV } from "./env.server";
+import { logger } from "~/utils/logger.server";
+import { slack } from "~/utils/slack.server";
+
+export enum AlertSeverity {
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical",
+}
+
+export async function sendAlert(
+  severity: AlertSeverity,
+  title: string,
+  message: string,
+  details?: Record<string, any>,
+) {
+  try {
+    // 1. 데이터베이스에 알림 저장
+    const alert = await prisma.alert.create({
+      data: {
+        severity,
+        title,
+        message,
+        details: details ? JSON.stringify(details) : null,
+      },
+    });
+    
+    // 2. 슬랙 웹훅으로 알림 전송 (프로덕션 환경에서만)
+    if (ENV.NODE_ENV === "production") {
+      const color = getColorByAlertSeverity(severity);
+      
+      await slack.chat.postMessage({
+        channel: ENV.SLACK_CHANNEL,
+        attachments: [
+          {
+            color,
+            title,
+            text: message,
+            fields: details
+              ? Object.entries(details).map(([key, value]) => ({
+                  title: key,
+                  value: JSON.stringify(value),
+                  short: true,
+                }))
+              : undefined,
+            footer: `YkMake ${ENV.NODE_ENV}`,
+            ts: Math.floor(Date.now() / 1000).toString(),
+          },
+        ],
+      });
+    }
+    
+    logger.info(`Alert sent: ${severity} - ${title}`, { alertId: alert.id });
+    return alert;
+  } catch (error) {
+    logger.error("Failed to send alert", { error, severity, title, message });
+    throw error;
+  }
+}
+
+// 알림 심각도에 따른 색상 코드 반환 헬퍼 함수
+function getColorByAlertSeverity(severity: AlertSeverity): string {
+  const colorMap = {
+    [AlertSeverity.INFO]: "#36a64f",     // 녹색
+    [AlertSeverity.WARNING]: "#ffd700",  // 황색
+    [AlertSeverity.ERROR]: "#ff4500",    // 주황색
+    [AlertSeverity.CRITICAL]: "#ff0000", // 적색
+  };
+  
+  return colorMap[severity] || "#cccccc"; // 기본값은 회색
+} 

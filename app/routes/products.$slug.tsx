@@ -6,7 +6,10 @@ import { Section } from "~/components/layouts/section";
 import { Button } from "~/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
-import { ArrowLeft, MessageSquare, ThumbsUp, Share2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, ThumbsUp, Share2, Edit } from "lucide-react";
+import { useEffect, useState } from "react";
+import ClientOnly from "~/components/ui/client-only";
+import { ActionButtonWrapper } from "~/components/ui/button-layout";
 
 export async function loader({ params }: LoaderFunctionArgs) {
     const { slug } = params;
@@ -31,6 +34,19 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 export default function ProductDetailPage() {
     const { product, relatedProducts } = useLoaderData<typeof loader>();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isAuthor, setIsAuthor] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+            setIsLoggedIn(loggedIn);
+
+            // 실제 환경에서는 현재 로그인한 사용자 ID와 제품 작성자 ID를 비교해야 함
+            // 여기서는 예시로 50%의 확률로 작성자로 설정
+            setIsAuthor(loggedIn && Math.random() > 0.5);
+        }
+    }, []);
 
     const initials = product.authorName
         .split(" ")
@@ -101,19 +117,43 @@ export default function ProductDetailPage() {
                                 <Share2 size={16} className="mr-2" />
                                 공유하기
                             </Button>
+
+                            <ClientOnly>
+                                {isLoggedIn && isAuthor && (
+                                    <ActionButtonWrapper>
+                                        <Button variant="outline" className="inline-flex items-center">
+                                            <Edit size={16} className="mr-2" />
+                                            수정하기
+                                        </Button>
+                                    </ActionButtonWrapper>
+                                )}
+                            </ClientOnly>
                         </div>
 
                         {/* 댓글 섹션 */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold mb-4">댓글</h2>
-                            <div className="bg-muted/40 p-4 rounded text-center">
-                                <p className="text-muted-foreground">댓글을 보려면 로그인하세요.</p>
-                                <div className="mt-2">
-                                    <Button asChild size="sm">
-                                        <Link to="/auth/login">로그인하기</Link>
-                                    </Button>
+                            <ClientOnly fallback={
+                                <div className="bg-muted/40 p-4 rounded text-center">
+                                    <p className="text-muted-foreground">로딩 중...</p>
                                 </div>
-                            </div>
+                            }>
+                                {isLoggedIn ? (
+                                    <div>
+                                        <p className="text-muted-foreground">댓글을 작성해보세요.</p>
+                                        {/* 댓글 작성 폼은 구현되지 않음 */}
+                                    </div>
+                                ) : (
+                                    <div className="bg-muted/40 p-4 rounded text-center">
+                                        <p className="text-muted-foreground">댓글을 보려면 로그인하세요.</p>
+                                        <div className="mt-2">
+                                            <Button asChild size="sm">
+                                                <Link to="/auth/login">로그인하기</Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </ClientOnly>
                         </div>
                     </div>
 
@@ -143,9 +183,17 @@ export default function ProductDetailPage() {
                                 <p className="text-sm text-muted-foreground mb-4">
                                     YkMake 커뮤니티에 참여하여 다양한 제품을 발견하고 개발자들과 소통하세요.
                                 </p>
-                                <Button asChild className="w-full">
-                                    <Link to="/auth/register">무료로 가입하기</Link>
-                                </Button>
+                                <ClientOnly>
+                                    {!isLoggedIn ? (
+                                        <Button asChild className="w-full">
+                                            <Link to="/auth/register">무료로 가입하기</Link>
+                                        </Button>
+                                    ) : (
+                                        <Button asChild className="w-full">
+                                            <Link to="/products/register">제품 등록하기</Link>
+                                        </Button>
+                                    )}
+                                </ClientOnly>
                             </div>
                         </div>
                     </div>

@@ -47,10 +47,12 @@ export function ProductCard({
     featured = false,
 }: ProductCardProps) {
     const initials = authorName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase();
+        ? authorName
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+        : "UN";
 
     return (
         <Card className={`overflow-hidden ${featured ? 'border-primary/50 shadow-md' : ''}`}>

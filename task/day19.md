@@ -134,7 +134,7 @@ export function OptimizedImage({
 `app/utils/request-handler.server.ts` 파일을 생성하고 다음과 같이 구현합니다:
 
 ```typescript
-import { json } from "@remix-run/node";
+// 최신 Remix에서는 json 함수를 직접 가져오지 않고 Response.json() 사용
 import { ZodError } from "zod";
 import { logger } from "./logger.server";
 import { captureError } from "./error-monitoring.server";
@@ -155,7 +155,7 @@ export async function handleRequest<T>(
     if (options.cacheKey) {
       const cached = await getCache<T>(options.cacheKey);
       if (cached) {
-        return json(cached);
+        return Response.json(cached);
       }
     }
 
@@ -176,10 +176,10 @@ export async function handleRequest<T>(
       );
     }
 
-    return json(data);
+    return Response.json(data);
   } catch (error) {
     if (error instanceof ZodError) {
-      return json(
+      return Response.json(
         { error: "Validation Error", details: error.errors },
         { status: 400 },
       );
@@ -188,7 +188,7 @@ export async function handleRequest<T>(
     logger.error("Request failed", { error });
     await captureError(error as Error);
 
-    return json(
+    return Response.json(
       { error: "Internal Server Error" },
       { status: 500 },
     );

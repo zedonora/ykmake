@@ -381,9 +381,9 @@ import { prisma } from "~/utils/api.server";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const url = new URL(request.url);
-    const category = url.searchParams.get("category");
-    const sort = url.searchParams.get("sort") || "latest";
+  const url = new URL(request.url);
+  const category = url.searchParams.get("category");
+  const sort = url.searchParams.get("sort") || "latest";
 
     // 모든 카테고리 가져오기
     const categoriesResult = await prisma.product.groupBy({
@@ -395,15 +395,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const featuredProducts = await prisma.product.findMany({
         take: 3,
         orderBy: { views: 'desc' },
-        include: {
-            author: {
-                select: { name: true },
-            },
-            _count: {
-                select: { likes: true, comments: true },
-            },
-        },
-    });
+    include: {
+      author: {
+        select: { name: true },
+      },
+      _count: {
+        select: { likes: true, comments: true },
+      },
+    },
+  });
 
     // 최신 제품 가져오기
     const latestProducts = await prisma.product.findMany({
@@ -508,38 +508,38 @@ import { prisma } from "~/utils/api.server";
 import { requireUser } from "~/utils/api.server";
 
 export async function action({ request }: ActionFunctionArgs) {
-    const user = await requireUser(request);
-    const formData = await request.formData();
+  const user = await requireUser(request);
+  const formData = await request.formData();
 
-    const title = formData.get("title");
-    const description = formData.get("description");
-    const category = formData.get("category");
-    const image = formData.get("image");
+  const title = formData.get("title");
+  const description = formData.get("description");
+  const category = formData.get("category");
+  const image = formData.get("image");
 
-    if (
-        typeof title !== "string" ||
-        typeof description !== "string" ||
-        typeof category !== "string"
-    ) {
+  if (
+    typeof title !== "string" ||
+    typeof description !== "string" ||
+    typeof category !== "string"
+  ) {
         return new Response(
             JSON.stringify({ errors: { title: "유효하지 않은 입력입니다" } }),
             { status: 400, headers: { "Content-Type": "application/json" } }
-        );
-    }
+    );
+  }
 
-    const product = await prisma.product.create({
-        data: {
-            title,
-            description,
-            category,
-            image: typeof image === "string" ? image : undefined,
-            author: {
-                connect: { id: user.id },
-            },
-        },
-    });
+  const product = await prisma.product.create({
+    data: {
+      title,
+      description,
+      category,
+      image: typeof image === "string" ? image : undefined,
+      author: {
+        connect: { id: user.id },
+      },
+    },
+  });
 
-    return redirect(`/products/${product.id}`);
+  return redirect(`/products/${product.id}`);
 }
 
 export default function NewProductPage() {
@@ -579,40 +579,40 @@ import { prisma } from "~/utils/api.server";
 import { requireUser } from "~/utils/api.server";
 
 export async function action({ request }: ActionFunctionArgs) {
-    const user = await requireUser(request);
-    const formData = await request.formData();
+  const user = await requireUser(request);
+  const formData = await request.formData();
 
-    const name = formData.get("name");
-    const description = formData.get("description");
-    const category = formData.get("category");
+  const name = formData.get("name");
+  const description = formData.get("description");
+  const category = formData.get("category");
 
-    if (
-        typeof name !== "string" ||
-        typeof description !== "string" ||
-        typeof category !== "string"
-    ) {
+  if (
+    typeof name !== "string" ||
+    typeof description !== "string" ||
+    typeof category !== "string"
+  ) {
         return new Response(
             JSON.stringify({ errors: { name: "유효하지 않은 입력입니다" } }),
             { status: 400, headers: { "Content-Type": "application/json" } }
-        );
-    }
+    );
+  }
 
-    const team = await prisma.team.create({
-        data: {
-            name,
-            description,
-            category,
-            status: "recruiting",
-            members: {
-                create: {
-                    userId: user.id,
-                    role: "OWNER",
-                },
-            },
+  const team = await prisma.team.create({
+    data: {
+      name,
+      description,
+      category,
+      status: "recruiting",
+      members: {
+        create: {
+          userId: user.id,
+          role: "OWNER",
         },
-    });
+      },
+    },
+  });
 
-    return redirect(`/teams/${team.id}`);
+  return redirect(`/teams/${team.id}`);
 }
 ```
 

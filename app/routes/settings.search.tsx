@@ -1,4 +1,4 @@
-import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
@@ -16,7 +16,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     // 실제 환경에서는 서버에서 검색하지만, 여기서는 클라이언트 측에서 처리
     const results = query ? searchSettings(query) : [];
 
-    return json({ results, query });
+    return Response.json({ results, query });
 }
 
 export default function SettingsSearch() {

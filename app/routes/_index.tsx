@@ -1,5 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { RootLayout } from "~/components/layouts/root-layout";
@@ -24,6 +24,7 @@ export default function Index() {
   const { user } = useLoaderData<typeof loader>();
   const [isLoggedIn, setIsLoggedIn] = useState(!!user);
   const [isAdmin, setIsAdmin] = useState(true);
+  const navigate = useNavigate();
 
   // localStorage에 상태 저장
   useEffect(() => {
@@ -33,10 +34,25 @@ export default function Index() {
     }
   }, [isAdmin, isLoggedIn]);
 
+  // 로그인 버튼 핸들러
+  const handleLoginClick = () => {
+    if (isLoggedIn) {
+      // 로그아웃 기능
+      setIsLoggedIn(false);
+      localStorage.setItem("isLoggedIn", "false");
+      localStorage.setItem("isAdmin", "false");
+      setIsAdmin(false);
+      window.dispatchEvent(new Event('logoutEvent'));
+    } else {
+      // 로그인 페이지로 이동
+      navigate("/auth/login");
+    }
+  };
+
   return (
     <div>
       <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <Button onClick={() => setIsLoggedIn(!isLoggedIn)}>
+        <Button onClick={handleLoginClick}>
           {isLoggedIn ? "로그아웃" : "로그인"}
         </Button>
         {isLoggedIn && (

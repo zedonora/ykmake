@@ -8,8 +8,10 @@ import {
     DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Bell, MessageCircle, FileEdit, User, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { CommandMenu } from "~/components/search/command-menu";
+import { ButtonGroup, ActionButtonWrapper, ProfileButtonWrapper } from "~/components/ui/button-layout";
+import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
 
 interface RootLayoutProps {
     children: ReactNode;
@@ -28,6 +30,7 @@ export function RootLayout({
     const isActive = (path: string) => location.pathname.startsWith(path);
 
     const [isAdmin, setIsAdmin] = useState(propIsAdmin);
+    const [profileOpen, setProfileOpen] = useState(false);
 
     useEffect(() => {
         if (typeof window !== "undefined" && propIsAdmin === undefined) {
@@ -36,6 +39,19 @@ export function RootLayout({
             setIsAdmin(!!propIsAdmin);
         }
     }, [propIsAdmin]);
+
+    const handleLogout = () => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("isLoggedIn", "false");
+            localStorage.setItem("isAdmin", "false");
+            setIsAdmin(false);
+            window.dispatchEvent(new Event('logoutEvent'));
+        }
+    };
+
+    const handleLogin = () => {
+        // Implement login logic here
+    };
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -66,7 +82,7 @@ export function RootLayout({
                                         <Link to="/products/leaderboard">리더보드</Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
-                                        <Link to="/products/submit">제품 등록</Link>
+                                        <Link to="/products/register">제품 등록</Link>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -137,41 +153,138 @@ export function RootLayout({
                     </div>
                     <div className="flex items-center gap-4">
                         <CommandMenu />
-                        {isLoggedIn ? (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <span className="sr-only">사용자 메뉴</span>
-                                        <div className="h-8 w-8 rounded-full bg-muted" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild>
-                                        <Link to="/profile/settings/account">계정 설정</Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <Link to="/profile/settings/notifications">알림 설정</Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <Link to="/" onClick={(e) => {
-                                            e.preventDefault();
-                                            if (typeof window !== "undefined") {
-                                                localStorage.setItem("isLoggedIn", "false");
-                                                localStorage.setItem("isAdmin", "false");
-                                                setIsAdmin(false);
-                                                window.dispatchEvent(new Event('logoutEvent'));
-                                            }
-                                        }}>
-                                            로그아웃
+
+                        {/* 실시간 기능 버튼들 (로그인 사용자에게만 표시) */}
+                        {isLoggedIn && (
+                            <ButtonGroup className="mx-2" isAdmin={isAdmin}>
+                                <ActionButtonWrapper className="mr-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        asChild
+                                        className={cn(
+                                            isActive("/notifications") && "bg-accent"
+                                        )}
+                                    >
+                                        <Link to="/notifications" title="알림">
+                                            <Bell className="h-5 w-5" />
+                                            <span className="sr-only">알림</span>
                                         </Link>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                    </Button>
+                                </ActionButtonWrapper>
+
+                                <ActionButtonWrapper className="mr-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        asChild
+                                        className={cn(
+                                            isActive("/chat") && "bg-accent"
+                                        )}
+                                    >
+                                        <Link to="/chat" title="채팅">
+                                            <MessageCircle className="h-5 w-5" />
+                                            <span className="sr-only">채팅</span>
+                                        </Link>
+                                    </Button>
+                                </ActionButtonWrapper>
+
+                                <ActionButtonWrapper className="mr-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        asChild
+                                        className={cn(
+                                            isActive("/collaboration") && "bg-accent",
+                                            "mr-4"
+                                        )}
+                                    >
+                                        <Link to="/collaboration" title="협업 편집">
+                                            <FileEdit className="h-5 w-5" />
+                                            <span className="sr-only">협업 편집</span>
+                                        </Link>
+                                    </Button>
+                                </ActionButtonWrapper>
+                            </ButtonGroup>
+                        )}
+
+                        {isLoggedIn ? (
+                            <ProfileButtonWrapper className="mr-4">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-full relative"
+                                    onClick={() => setProfileOpen(!profileOpen)}
+                                >
+                                    <Avatar>
+                                        <AvatarImage src="/user-avatar.png" alt="User" />
+                                        <AvatarFallback>U</AvatarFallback>
+                                    </Avatar>
+                                    {profileOpen && (
+                                        <div className="absolute right-0 top-10 min-w-[240px] rounded-md border border-border bg-card p-2 shadow-md z-10">
+                                            <ul className="flex flex-col space-y-1">
+                                                <li>
+                                                    <Link
+                                                        to="/profile"
+                                                        className="flex items-center gap-2 rounded-md p-2 hover:bg-muted"
+                                                    >
+                                                        <User className="h-4 w-4" />
+                                                        <span>프로필</span>
+                                                    </Link>
+                                                </li>
+                                                <li>
+                                                    <Link
+                                                        to="/notifications"
+                                                        className="flex items-center gap-2 rounded-md p-2 hover:bg-muted"
+                                                    >
+                                                        <Bell className="h-4 w-4" />
+                                                        <span>알림</span>
+                                                    </Link>
+                                                </li>
+                                                <li>
+                                                    <Link
+                                                        to="/dashboard"
+                                                        className="flex items-center gap-2 rounded-md p-2 hover:bg-muted"
+                                                    >
+                                                        <LayoutDashboard className="h-4 w-4" />
+                                                        <span>대시보드</span>
+                                                    </Link>
+                                                </li>
+                                                <li>
+                                                    <Link
+                                                        to="/settings"
+                                                        className="flex items-center gap-2 rounded-md p-2 hover:bg-muted"
+                                                    >
+                                                        <Settings className="h-4 w-4" />
+                                                        <span>설정</span>
+                                                    </Link>
+                                                </li>
+                                                <li className="border-t border-border pt-1">
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className="flex w-full items-center gap-2 rounded-md p-2 text-destructive hover:bg-muted"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        <span>로그아웃</span>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    )}
+                                </Button>
+                            </ProfileButtonWrapper>
                         ) : (
                             !hideLoginButton && (
-                                <Button asChild>
-                                    <Link to="/auth/login">로그인</Link>
-                                </Button>
+                                <ProfileButtonWrapper>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleLogin}
+                                        className="mr-4"
+                                    >
+                                        로그인
+                                    </Button>
+                                </ProfileButtonWrapper>
                             )
                         )}
                     </div>
@@ -206,7 +319,7 @@ export function RootLayout({
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/products/submit" className="text-muted-foreground transition-colors hover:text-foreground">
+                                    <Link to="/products/register" className="text-muted-foreground transition-colors hover:text-foreground">
                                         제품 등록
                                     </Link>
                                 </li>

@@ -108,7 +108,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         ]
     };
 
-    return { results, user, query, type };
+    return Response.json({ results, user, query, type });
 }
 
 export default function SearchResults() {

@@ -8,83 +8,83 @@ generator client {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String
-  role          Role      @default(USER)
-  bio           String?
-  website       String?
-  avatar        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  bio       String?
+  website   String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  products      Product[]
-  teams         TeamMember[]
-  comments      Comment[]
-  likes         Like[]
+  products Product[]
+  teams    TeamMember[]
+  comments Comment[]
+  likes    Like[]
 }
 
 model Product {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String
   category    String
   image       String?
-  views       Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  author      User      @relation(fields: [authorId], references: [id])
-  authorId    String
-  comments    Comment[]
-  likes       Like[]
+  author   User      @relation(fields: [authorId], references: [id])
+  authorId String
+  comments Comment[]
+  likes    Like[]
 }
 
 model Team {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String
   category    String
   status      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  members     TeamMember[]
+  members TeamMember[]
 }
 
 model TeamMember {
-  id        String    @id @default(cuid())
-  role      String
-  joinedAt  DateTime  @default(now())
+  id       String   @id @default(cuid())
+  role     String
+  joinedAt DateTime @default(now())
 
-  user      User      @relation(fields: [userId], references: [id])
-  userId    String
-  team      Team      @relation(fields: [teamId], references: [id])
-  teamId    String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
 
   @@unique([userId, teamId])
 }
 
 model Comment {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  author    User      @relation(fields: [authorId], references: [id])
+  author    User    @relation(fields: [authorId], references: [id])
   authorId  String
-  product   Product   @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
   productId String
 }
 
 model Like {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
 
-  user      User      @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
   userId    String
-  product   Product   @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
   productId String
 
   @@unique([userId, productId])
@@ -93,4 +93,15 @@ model Like {
 enum Role {
   USER
   ADMIN
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  severity  String // "info", "warning", "error", "critical"
+  title     String
+  message   String
+  details   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

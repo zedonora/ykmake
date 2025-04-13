@@ -57,17 +57,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function ProductsIndexPage() {
     const { featuredProducts, latestProducts, allCategories } = useLoaderData<typeof loader>();
 
+    // 현재 날짜에서 7일 전 날짜 계산
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
     return (
         <>
             <PageHeader
                 title="제품 탐색"
-                description="YkMake 커뮤니티에서 개발자들이 만든 다양한 제품을 발견하세요."
+                description="개발자들이 만든 제품을 발견하고 지원하세요"
             >
-                <div className="flex gap-4">
-                    <Button asChild>
-                        <Link to="/products/new">제품 등록하기</Link>
-                    </Button>
-                </div>
+                <Button asChild>
+                    <Link to="/products/register">제품 등록</Link>
+                </Button>
             </PageHeader>
 
             {featuredProducts.length > 0 && (
@@ -80,17 +82,21 @@ export default function ProductsIndexPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {featuredProducts.map((product) => (
-                            <ProductCard key={product.id}
+                        {featuredProducts.map((product: any) => (
+                            <ProductCard
+                                key={product.id}
                                 id={product.id}
                                 title={product.title}
                                 description={product.description}
+                                imageUrl={product.image || "https://placehold.co/600x400/png"}
                                 category={product.category}
-                                views={product.views}
-                                author={product.author.name}
+                                upvotes={product._count.likes}
                                 comments={product._count.comments}
-                                likes={product._count.likes}
-                                image={product.image || undefined}
+                                authorName={product.author.name}
+                                authorImageUrl={undefined}
+                                launchDate={new Date(product.createdAt).toLocaleDateString()}
+                                slug={product.id.toString()}
+                                featured={true}
                             />
                         ))}
                     </div>
@@ -106,17 +112,21 @@ export default function ProductsIndexPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {latestProducts.map((product) => (
-                        <ProductCard key={product.id}
+                    {latestProducts.map((product: any) => (
+                        <ProductCard
+                            key={product.id}
                             id={product.id}
                             title={product.title}
                             description={product.description}
+                            imageUrl={product.image || "https://placehold.co/600x400/png"}
                             category={product.category}
-                            views={product.views}
-                            author={product.author.name}
+                            upvotes={product._count.likes}
                             comments={product._count.comments}
-                            likes={product._count.likes}
-                            image={product.image || undefined}
+                            authorName={product.author.name}
+                            authorImageUrl={undefined}
+                            launchDate={new Date(product.createdAt).toLocaleDateString()}
+                            slug={product.id.toString()}
+                            featured={false}
                         />
                     ))}
                 </div>
@@ -126,7 +136,7 @@ export default function ProductsIndexPage() {
                 <h2 className="text-2xl font-bold mb-6">카테고리별 탐색</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {allCategories.map((category) => (
+                    {allCategories.map((category: string) => (
                         <Link
                             key={category}
                             to={`/products/categories/${category.toLowerCase()}`}

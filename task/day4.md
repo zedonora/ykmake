@@ -279,7 +279,7 @@ export default function ProductsIndexPage() {
       >
         <div className="flex gap-4">
           <Button asChild>
-            <Link to="/products/submit">제품 등록하기</Link>
+            <Link to="/products/register">제품 등록하기</Link>
           </Button>
         </div>
       </PageHeader>
@@ -373,7 +373,7 @@ export default function LeaderboardIndexPage() {
             <Link to="/products">전체 제품</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/products/submit">제품 등록하기</Link>
+            <Link to="/products/register">제품 등록하기</Link>
           </Button>
         </div>
       </PageHeader>
@@ -449,7 +449,7 @@ export default function LeaderboardDailyPage() {
             <Link to="/products">전체 제품</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/products/submit">제품 등록하기</Link>
+            <Link to="/products/register">제품 등록하기</Link>
           </Button>
         </div>
       </PageHeader>
@@ -525,7 +525,7 @@ export default function LeaderboardWeeklyPage() {
             <Link to="/products">전체 제품</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/products/submit">제품 등록하기</Link>
+            <Link to="/products/register">제품 등록하기</Link>
           </Button>
         </div>
       </PageHeader>
@@ -601,7 +601,7 @@ export default function LeaderboardMonthlyPage() {
             <Link to="/products">전체 제품</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/products/submit">제품 등록하기</Link>
+            <Link to="/products/register">제품 등록하기</Link>
           </Button>
         </div>
       </PageHeader>

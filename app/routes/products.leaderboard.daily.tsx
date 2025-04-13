@@ -33,7 +33,7 @@ export default function LeaderboardDailyPage() {
                         <Link to="/products">전체 제품</Link>
                     </Button>
                     <Button asChild size="sm">
-                        <Link to="/products/submit">제품 등록하기</Link>
+                        <Link to="/products/register">제품 등록하기</Link>
                     </Button>
                 </div>
             </PageHeader>
