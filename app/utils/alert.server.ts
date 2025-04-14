@@ -1,4 +1,12 @@
 import { prisma } from "~/utils/api.server";
+import { WebClient, LogLevel } from "@slack/web-api";
+import { ENV } from "./env.server";
+import { logger } from "./logger.server";
+
+// Slack 클라이언트 초기화
+const slack = new WebClient(ENV.SLACK_TOKEN, {
+    logLevel: ENV.NODE_ENV === "production" ? LogLevel.INFO : LogLevel.DEBUG,
+});
 
 /**
  * 알림 심각도 수준을 정의하는 열거형
@@ -11,12 +19,12 @@ export enum AlertSeverity {
 }
 
 /**
- * 알림을 데이터베이스에 기록하고 필요시 외부 서비스로 알림을 전송합니다.
+ * 알림을 데이터베이스에 기록하고 Slack으로 알림을 전송합니다.
  * @param severity 알림 심각도
  * @param title 알림 제목
  * @param message 알림 메시지
  * @param details 추가 상세 정보 (선택사항)
- * @returns 생성된 알림 객체
+ * @returns 생성된 알림 객체 (DB 저장 기준)
  */
 export async function sendAlert(
     severity: AlertSeverity,
@@ -24,9 +32,10 @@ export async function sendAlert(
     message: string,
     details?: Record<string, any>
 ) {
+    let savedAlert; // DB 저장 결과 저장 변수
     try {
         // 데이터베이스에 알림 저장
-        const alert = await prisma.alert.create({
+        savedAlert = await prisma.alert.create({
             data: {
                 severity,
                 title,
@@ -34,39 +43,95 @@ export async function sendAlert(
                 details: details ? JSON.stringify(details) : null,
             },
         });
+        logger.info("Alert saved to database", { alertId: savedAlert.id });
 
-        // 프로덕션 환경에서는 추가 작업을 수행할 수 있음
-        // 예: Slack 메시지 전송, 이메일 알림 등
-        if (process.env.NODE_ENV === "production") {
-            console.log(`[ALERT] ${severity.toUpperCase()}: ${title} - ${message}`);
+    } catch (dbError: any) {
+        logger.error("Failed to save alert to database", {
+            error: dbError.message,
+            severity,
+            title
+        });
+        // DB 저장 실패 시에도 Slack 알림은 시도할 수 있도록 throw하지 않음
+        // throw dbError; // 필요하다면 에러를 다시 던짐
+    }
 
-            // 외부 알림 서비스 연동 코드 (추후 구현)
-            // 예: sendSlackNotification(severity, title, message, details);
+    // Slack 알림 전송 로직 추가
+    if (!ENV.SLACK_TOKEN || !ENV.SLACK_CHANNEL) {
+        logger.warn("Slack token or channel not configured. Skipping alert.", { severity, title });
+        return savedAlert; // DB 저장 결과만 반환
+    }
+
+    try {
+        const color = {
+            [AlertSeverity.INFO]: "#36a64f",
+            [AlertSeverity.WARNING]: "#ffcd3c",
+            [AlertSeverity.ERROR]: "#e01e5a",
+            [AlertSeverity.CRITICAL]: "#ff0000",
+        }[severity];
+
+        const blocks: any[] = [
+            {
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: `[${severity.toUpperCase()}] ${title}`,
+                    emoji: true,
+                },
+            },
+            {
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: message,
+                },
+            },
+        ];
+
+        if (details && Object.keys(details).length > 0) {
+            blocks.push({ type: "divider" as const });
+            const fields = Object.entries(details)
+                .map(([key, value]) => `*${key}*: \`\`\`${JSON.stringify(value, null, 2)}\`\`\``)
+                .join("\n");
+
+            blocks.push({
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: fields,
+                },
+            });
         }
 
-        return alert;
-    } catch (error) {
-        console.error("알림 발송 실패:", error);
-        throw error;
-    }
-}
+        blocks.push({ type: "divider" as const });
+        blocks.push({
+            type: "context" as const,
+            elements: [
+                {
+                    type: "mrkdwn" as const,
+                    text: `*Service*: YkMake | *Environment*: ${ENV.NODE_ENV} | *Timestamp*: <!date^${Math.floor(Date.now() / 1000)}^{date_num} {time_secs}|${new Date().toISOString()}>`,
+                },
+            ],
+        });
 
-/**
- * 알림 심각도 수준에 따른 색상 코드를 반환합니다.
- * @param severity 알림 심각도
- * @returns 색상 코드
- */
-function getColorForSeverity(severity: AlertSeverity): string {
-    switch (severity) {
-        case AlertSeverity.INFO:
-            return "#2196F3"; // 파란색
-        case AlertSeverity.WARNING:
-            return "#FF9800"; // 주황색
-        case AlertSeverity.ERROR:
-            return "#F44336"; // 빨간색
-        case AlertSeverity.CRITICAL:
-            return "#9C27B0"; // 보라색
-        default:
-            return "#757575"; // 회색
+        await slack.chat.postMessage({
+            channel: ENV.SLACK_CHANNEL,
+            text: `[${severity.toUpperCase()}] ${title}: ${message}`, // Fallback text
+            attachments: [{ // Use attachments for block kit compatibility
+                color,
+                blocks
+            }],
+        });
+
+        logger.info("Alert sent successfully via Slack", { severity, title });
+
+    } catch (slackError: any) {
+        logger.error("Failed to send alert via Slack", {
+            error: slackError.message,
+            slackErrorData: slackError.data,
+            severity,
+            title,
+        });
     }
+
+    return savedAlert; // DB 저장 결과 반환
 } 

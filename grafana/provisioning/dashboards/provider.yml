@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "YkMake Dashboards" # 프로바이더 이름
+    orgId: 1 # 기본 조직 ID
+    folder: "YkMake" # Grafana 내 폴더 이름
+    type: file # 파일 시스템에서 대시보드 로드
+    disableDeletion: false # Grafana UI에서 대시보드 삭제 허용
+    editable: true # Grafana UI에서 대시보드 수정 허용
+    options:
+      path: /etc/grafana/provisioning/dashboards # 대시보드 JSON 파일 경로 (Dockerfile/Volume 마운트 경로)

@@ -30,4 +30,9 @@ export const ENV = {
     SMTP_PORT: getEnvVar("SMTP_PORT"),
     SMTP_USER: getEnvVar("SMTP_USER"),
     SMTP_PASS: getEnvVar("SMTP_PASS"),
+
+    // Monitoring
+    SLACK_TOKEN: getEnvVar("SLACK_TOKEN"),
+    SLACK_CHANNEL: getEnvVar("SLACK_CHANNEL"),
+    SENTRY_DSN: getEnvVar("SENTRY_DSN"),
 } as const;
