@@ -4,6 +4,31 @@
 
 오늘은 YkMake의 안정성과 성능을 개선합니다. 사용자 경험을 향상시키고 서비스의 안정성을 높이기 위한 다양한 최적화 작업을 진행합니다.
 
+## 파일 생성 명령어
+
+다음 명령어를 실행하여 필요한 파일들을 생성하고 디렉토리를 확인합니다:
+
+```bash
+mkdir -p app/components/ui app/utils app/models prisma
+touch app/components/ui/optimized-image.tsx
+touch app/utils/request-handler.server.ts
+touch app/utils/validators.server.ts
+# app/root.tsx, prisma/schema.prisma, app/models/product.server.ts, app/utils/cache.server.ts 파일은 수정합니다.
+```
+
+## 필수 라이브러리 설치 (및 도구)
+
+다음 명령어를 실행하여 최적화 관련 라이브러리를 설치합니다.
+
+```bash
+npm install react-intersection-observer zod node-cache
+# npm install --save-dev @types/node-cache # 필요시 타입 설치
+```
+
+성능 테스트에는 **k6**가 필요합니다. (Day 18 참고)
+데이터베이스 확인에는 **Prisma Studio** (`npx prisma studio`)가 사용됩니다.
+번들 크기 분석을 위해서는 프로젝트에 **번들 분석 도구** (예: `@remix-run/dev`의 analyze 기능 또는 `webpack-bundle-analyzer`) 설정 및 관련 `package.json` 스크립트 (예: `npm run analyze`)가 필요합니다.
+
 ## 작업 목록
 
 1. 프론트엔드 최적화
@@ -19,7 +44,7 @@
 
 ```typescript
 import { lazy, Suspense } from "react";
-import { Links, Meta, Scripts, ScrollRestoration } from "@remix-run/react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 import { LoadingSpinner } from "~/components/ui/loading-spinner";
 
 // 지연 로딩할 컴포넌트들
@@ -36,7 +61,6 @@ export default function App() {
       </head>
       <body>
         <Suspense fallback={<LoadingSpinner />}>
-          {/* 라우트에 따라 동적으로 컴포넌트 로드 */}
           <Outlet />
         </Suspense>
         <ScrollRestoration />
@@ -134,7 +158,6 @@ export function OptimizedImage({
 `app/utils/request-handler.server.ts` 파일을 생성하고 다음과 같이 구현합니다:
 
 ```typescript
-// 최신 Remix에서는 json 함수를 직접 가져오지 않고 Response.json() 사용
 import { ZodError } from "zod";
 import { logger } from "./logger.server";
 import { captureError } from "./error-monitoring.server";
@@ -268,6 +291,8 @@ model Team {
   @@index([createdAt])
 }
 ```
+
+**참고:** Prisma 스키마 수정 후에는 반드시 `npx prisma migrate dev --name add_indexes` 와 같은 명령어로 마이그레이션을 생성 및 적용하고, `npx prisma generate` 명령어로 Prisma Client를 업데이트해야 합니다.
 
 ### 쿼리 최적화
 

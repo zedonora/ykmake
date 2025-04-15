@@ -2,7 +2,45 @@
 
 ## 목표
 
-YkMake 프로젝트의 최종 테스트를 진행하고, 전체 프로젝트에 대한 문서화 작업을 수행합니다.
+YkMake 프로젝트의 최종 테스트를 진행하고, 전체 프로젝트에 대한 문서화 작업을 수행합니다. 서비스 출시 전 마지막 점검 단계입니다.
+
+## 파일 생성 명령어
+
+다음 명령어를 실행하여 필요한 파일 및 디렉토리를 생성합니다:
+
+```bash
+# 테스트 관련 디렉토리 및 파일
+mkdir -p app/components/ui/__tests__ app/utils/__tests__ tests/load tests/performance
+
+touch app/components/ui/__tests__/button.test.tsx
+touch app/utils/__tests__/api.server.test.ts
+touch tests/load/product-list.js
+touch tests/performance/navigation.js
+
+# 문서화 관련 디렉토리 및 파일
+mkdir -p docs/api docs/development docs/deployment
+
+touch docs/api/README.md
+touch docs/development/README.md
+touch docs/deployment/checklist.md
+```
+
+## 필수 라이브러리 설치 (및 도구)
+
+다음 명령어를 실행하여 테스트 관련 개발 의존성을 설치합니다. (프로젝트 설정에 따라 이미 설치되었을 수 있습니다.)
+
+```bash
+# 유닛/통합 테스트 (Vitest + Testing Library 예시)
+npm install --save-dev vitest @testing-library/react @testing-library/user-event jsdom @testing-library/jest-dom
+
+# 엔드투엔드/성능 테스트 (Playwright 예시)
+npm install --save-dev playwright @playwright/test
+
+# 로드 테스트 (k6) - Day 18 참고, 별도 설치 필요
+# https://k6.io/docs/getting-started/installation/
+```
+
+문서화는 Markdown 형식으로 작성하며, 필요시 정적 사이트 생성기(예: VitePress, Docusaurus)를 도입할 수 있습니다.
 
 ## 작업 목록
 
@@ -303,6 +341,7 @@ import { expect } from "@playwright/test";
 }
 ```
 ```
+```
 
 ### 개발 가이드
 
@@ -354,132 +393,176 @@ npm run dev
 
 ```
 ykmake/
-├── app/
-│   ├── components/    # 재사용 가능한 컴포넌트
-│   ├── routes/        # 페이지 컴포넌트
-│   ├── models/        # 데이터 모델
-│   ├── utils/         # 유틸리티 함수
-│   └── styles/        # 스타일 파일
-├── prisma/           # 데이터베이스 스키마
-├── public/           # 정적 파일
-└── tests/            # 테스트 파일
+├── app/ # Remix 애플리케이션 코드
+│ ├── components/ # 재사용 가능한 UI 컴포넌트 (ui/, feedback/, guide/ 등)
+│ ├── routes/ # 라우트 파일 (Flat Routes 컨벤션)
+│ ├── models/ # 데이터베이스 모델 관련 함수 (예: user.server.ts)
+│ ├── utils/ # 유틸리티 함수 (api.server.ts, cache.server.ts, a11y.ts 등)
+│ ├── styles/ # 전역 스타일 (필요시)
+│ ├── entry.client.tsx # 클라이언트 측 진입점
+│ ├── entry.server.tsx # 서버 측 진입점
+│ └── root.tsx # 루트 레이아웃 컴포넌트
+├── prisma/ # Prisma 관련 파일
+│ ├── schema.prisma # 데이터베이스 스키마 정의
+│ ├── migrations/ # 데이터베이스 마이그레이션 기록
+│ └── seed.ts # 데이터 시딩 스크립트 (선택 사항)
+├── public/ # 정적 파일 (favicon, images 등)
+├── tests/ # 엔드투엔드, 로드, 성능 테스트 스크립트
+│ ├── load/
+│ └── performance/
+├── docs/ # 프로젝트 문서
+│ ├── api/
+│ ├── development/
+│ └── deployment/
+├── nginx/ # Nginx 설정 파일
+├── grafana/ # Grafana 설정 (provisioning/, dashboards/)
+├── prometheus/ # Prometheus 설정
+├── certbot/ # Certbot 설정 및 인증서 저장 위치
+├── scripts/ # 배포, 갱신 등 자동화 스크립트
+├── .env # 로컬 환경 변수 (Git 무시)
+├── .env.example # 환경 변수 예시
+├── docker-compose.yml # Docker Compose 설정
+├── Dockerfile # 애플리케이션 Docker 이미지 빌드 설정
+├── package.json # 프로젝트 의존성 및 스크립트
+├── tsconfig.json # TypeScript 설정
+└── README.md # 프로젝트 개요 및 기본 정보
 ```
 
-## 개발 가이드라인
+## 3. 개발 가이드라인
 
-### 코드 스타일
+### 3.1. 코드 스타일
 
-- ESLint와 Prettier를 사용하여 코드 스타일을 유지합니다.
-- 컴포넌트는 함수형으로 작성합니다.
-- 타입스크립트를 적극적으로 활용합니다.
+-   ESLint 와 Prettier 를 사용하여 코드 스타일 일관성을 유지합니다. (`package.json`의 lint/format 스크립트 참고)
+-   TypeScript를 적극 활용하여 타입 안정성을 높입니다.
+-   Remix의 loader/action 패턴을 활용하여 데이터 로딩 및 변경을 처리합니다.
+-   컴포넌트는 기능별로 분리하고, 필요시 shadcn/ui (또는 사용한 라이브러리) 컨벤션을 따릅니다.
 
-### 커밋 메시지
+### 3.2. 커밋 메시지
 
-커밋 메시지는 다음 형식을 따릅니다:
+[Conventional Commits](https://www.conventionalcommits.org/) 형식을 따르는 것을 권장합니다.
 
 ```
-type: 제목
+<type>[optional scope]: <description>
 
-본문
+[optional body]
 
-footer
+[optional footer(s)]
 ```
 
-타입:
-- feat: 새로운 기능
-- fix: 버그 수정
-- docs: 문서 수정
-- style: 코드 포맷팅
-- refactor: 코드 리팩토링
-- test: 테스트 코드
-- chore: 빌드 프로세스 변경
+-   **type:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+-   **scope:** 변경된 부분 (예: `auth`, `product`, `ui`)
+-   **description:** 변경 내용 요약 (현재 시제, 명령형)
 
-### 브랜치 전략
+### 3.3. 브랜치 전략
 
-- main: 프로덕션 브랜치
-- develop: 개발 브랜치
-- feature/*: 기능 개발
-- bugfix/*: 버그 수정
-- release/*: 릴리스 준비
-```
+[Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) 또는 [GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow) 와 같은 표준 브랜치 전략 사용을 권장합니다.
 
-## 4. 배포 준비
+-   `main` (또는 `master`): 안정적인 릴리스 버전
+-   `develop`: 다음 릴리스를 위한 개발 진행 브랜치
+-   `feature/<feature-name>`: 기능 개발
+-   `fix/<issue-number>` 또는 `hotfix/<issue-number>`: 버그 수정
+-   `release/<version>`: 릴리스 준비
+
+### 3.4. 테스트
+
+-   **단위/통합 테스트:** Vitest와 Testing Library를 사용하여 컴포넌트 및 유틸리티 함수를 테스트합니다. (`app` 디렉토리 내 `__tests__` 폴더 참고)
+-   **엔드투엔드 테스트:** Playwright를 사용하여 주요 사용자 시나리오를 테스트합니다. (`tests/e2e` 폴더 권장)
+-   테스트 커버리지를 측정하고 유지 관리합니다.
+
+## 4. 주요 유틸리티 및 기능
+
+-   **인증:** `app/utils/auth.server.ts`, `app/utils/session.server.ts`
+-   **데이터베이스:** `prisma/schema.prisma`, `app/models/*.server.ts`
+-   **캐싱:** `app/utils/cache.server.ts`
+-   **로깅:** `app/utils/logger.server.ts`
+-   **알림:** `app/utils/alert.server.ts`
+-   **에러 모니터링:** `app/utils/error-monitoring.server.ts`
+-   **분석:** `app/utils/analytics.client.ts`
+
 
 ### 배포 체크리스트
 
-`docs/deployment/checklist.md` 파일을 생성하고 다음과 같이 구현합니다:
+`docs/deployment/checklist.md` 파일을 생성하고 배포 전 확인해야 할 항목들을 정리합니다:
 
 ```markdown
-# 배포 체크리스트
+# YkMake 배포 체크리스트
 
-## 1. 환경 변수 확인
+이 체크리스트는 YkMake 애플리케이션을 프로덕션 환경에 배포하기 전 확인해야 할 주요 항목들을 포함합니다.
 
-- [ ] DATABASE_URL이 프로덕션 데이터베이스를 가리키는지 확인
-- [ ] SESSION_SECRET이 안전한 값으로 설정되었는지 확인
-- [ ] AWS 인증 정보가 올바르게 설정되었는지 확인
-- [ ] SMTP 설정이 올바른지 확인
+## ✅ 사전 준비 (Pre-Deployment)
 
-## 2. 보안 점검
+-   [ ] **코드 동결:** 배포할 최종 코드 버전 확정 (예: `main` 브랜치 최신 커밋 또는 특정 릴리스 태그)
+-   [ ] **최종 테스트 통과:** 모든 단위/통합/E2E 테스트 통과 확인 (`npm test`, `npm run test:e2e`)
+-   [ ] **환경 변수 설정:**
+    -   [ ] `.env.production` 파일 생성 및 모든 필수 환경 변수 설정 확인 (DB, 세션 시크릿, API 키, SMTP, 모니터링 등)
+    -   [ ] 민감 정보 (비밀번호, API 키)가 코드 저장소에 포함되지 않았는지 확인
+-   [ ] **데이터베이스 마이그레이션:**
+    -   [ ] 모든 Prisma 마이그레이션 스크립트 검토 및 테스트 완료
+    -   [ ] 프로덕션 DB 백업 수행 또는 백업 정책 확인
+-   [ ] **종속성 확인:** `package.json` 및 `package-lock.json` 최종 버전 확인
 
-- [ ] 모든 API 엔드포인트에 인증이 적용되었는지 확인
-- [ ] CORS 설정이 올바른지 확인
-- [ ] Rate limiting이 적용되었는지 확인
-- [ ] 민감한 정보가 로그에 노출되지 않는지 확인
+## ✅ 배포 프로세스 (Deployment Process)
 
-## 3. 성능 최적화
+-   [ ] **서버 접속 및 권한 확인:** 배포 대상 서버 접속 및 필요한 파일/디렉토리 권한 확인
+-   [ ] **코드 배포:** 최신 코드 서버로 전송 (예: `git pull`, CI/CD 파이프라인)
+-   [ ] **Docker 이미지 빌드:** 프로덕션용 Docker 이미지 빌드 (`docker compose build`)
+-   [ ] **서비스 중지 (필요시):** 무중단 배포가 아닌 경우 기존 서비스 중지 (`docker compose down`)
+-   [ ] **데이터베이스 마이그레이션 실행:** (`docker compose exec app npx prisma migrate deploy`)
+-   [ ] **서비스 시작:** 새로운 버전의 서비스 시작 (`docker compose up -d`)
+-   [ ] **Nginx 설정 적용:** Nginx 설정 파일 확인 및 리로드 (`docker compose exec nginx nginx -s reload`)
+-   [ ] **SSL 인증서 갱신 확인:** SSL 인증서 유효 기간 확인 및 필요시 갱신 (`scripts/renew-cert.sh` 실행 또는 자동 갱신 설정 확인)
 
-- [ ] 이미지가 최적화되었는지 확인
-- [ ] 번들 크기가 최적화되었는지 확인
-- [ ] 캐시 설정이 올바른지 확인
-- [ ] 데이터베이스 인덱스가 최적화되었는지 확인
+## ✅ 배포 후 확인 (Post-Deployment)
 
-## 4. 모니터링 설정
+-   [ ] **서비스 상태 확인:**
+    -   [ ] 애플리케이션 접속 및 주요 기능 정상 작동 확인 (로그인, 제품/팀 목록 등)
+    -   [ ] Docker 컨테이너 로그 확인 (`docker compose logs -f app`, `docker compose logs -f nginx` 등)
+    -   [ ] Nginx 접근 로그 및 에러 로그 확인
+-   [ ] **모니터링 시스템 확인:**
+    -   [ ] Grafana 대시보드에서 시스템 메트릭 및 애플리케이션 메트릭 정상 수집 확인
+    -   [ ] Prometheus 타겟 상태 확인 (`http://<prometheus-ip>:9090/targets`)
+    -   [ ] Sentry 에러 리포팅 정상 작동 확인 (테스트 에러 발생 등)
+    -   [ ] Slack 알림 채널 확인
+-   [ ] **성능 테스트 (선택 사항):** 배포 후 간단한 성능 테스트 실행 (`k6 run ...`)
+-   [ ] **보안 스캔 (선택 사항):** 배포된 환경 대상 보안 스캔 실행 (`scripts/security-test.sh`)
+-   [ ] **백업 확인:** 배포 후 첫 백업 정상 수행 확인
 
-- [ ] 로그 수집이 설정되었는지 확인
-- [ ] 메트릭 수집이 설정되었는지 확인
-- [ ] 알림이 설정되었는지 확인
-- [ ] 에러 트래킹이 설정되었는지 확인
+## ✅ 롤백 계획 (Rollback Plan)
 
-## 5. 백업 설정
+-   [ ] 롤백 조건 정의 (예: 심각한 오류 발생, 성능 저하 등)
+-   [ ] 롤백 절차 확인 및 테스트 (`scripts/rollback.sh` 등)
+-   [ ] 데이터베이스 롤백 필요 여부 및 절차 확인
 
-- [ ] 데이터베이스 백업이 설정되었는지 확인
-- [ ] 파일 스토리지 백업이 설정되었는지 확인
-- [ ] 복구 절차가 문서화되었는지 확인
+---
 
-## 6. 스케일링 준비
-
-- [ ] 로드 밸런서가 설정되었는지 확인
-- [ ] 오토스케일링이 설정되었는지 확인
-- [ ] CDN이 설정되었는지 확인
-
-## 7. 문서화 완료
-
-- [ ] API 문서가 최신 상태인지 확인
-- [ ] 배포 절차가 문서화되었는지 확인
-- [ ] 트러블슈팅 가이드가 작성되었는지 확인
+*이 체크리스트는 일반적인 항목이며, 프로젝트의 특성 및 인프라 환경에 따라 수정/보완이 필요합니다.*
 ```
+
+## 4. 최종 배포 준비 확인
+
+위의 테스트 및 문서화 작업을 완료하고, 배포 체크리스트를 통해 모든 항목을 점검하여 최종 배포 준비를 마칩니다.
 
 ## 다음 단계
 
-이제 YkMake 프로젝트의 모든 작업이 완료되었습니다! 다음과 같은 작업들이 성공적으로 수행되었습니다:
+이제 YkMake 프로젝트의 개발, 테스트, 문서화의 모든 단계가 완료되었습니다!
 
-- 테스트 코드 작성 및 실행
-- 성능 테스트 및 최적화
-- API 문서 작성
-- 개발 가이드 작성
-- 배포 체크리스트 작성
-
-프로젝트를 확인해보세요:
+프로젝트를 확인하고 최종 점검을 수행하세요:
 
 ```bash
-# 테스트 실행
+# 모든 테스트 실행
 npm test
 
-# 성능 테스트 실행
-npm run test:performance
+# (선택 사항) E2E 테스트 실행
+# npm run test:e2e
 
-# 문서 빌드
-npm run docs:build
+# (선택 사항) 최종 성능 테스트 실행
+# k6 run tests/load/product-list.js
+
+# (선택 사항) 문서 확인 (로컬 빌드 등)
+# npm run docs:dev
+
+# 배포 체크리스트 검토
+cat docs/deployment/checklist.md
 ```
 
-축하합니다! 이제 YkMake 프로젝트가 완성되었습니다. 🎉 
+축하합니다! 이제 YkMake 프로젝트를 실제 사용자에게 선보일 준비가 되었습니다. 🎉 지속적인 모니터링과 사용자 피드백 반영을 통해 서비스를 더욱 발전시켜 나가세요!
