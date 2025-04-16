@@ -61,3 +61,11 @@
     *   **`concepts/`**: 각 코드 스니펫 또는 작업 단계에 대한 개념, 설명, 이유 등을 저장하는 디렉토리입니다.
         *   `dayX/`: 해당 날짜의 개념 설명 디렉토리입니다.
         *   `dayX/N.md`: `jobs/dayX/N.md` 코드에 대한 상세 설명을 기록합니다. 
+
+## cursor에서 모든 파일 수정    
+```text
+search : !!!
+replace : ```
+include : mds/**/*.md
+exclude : prompt.md
+```

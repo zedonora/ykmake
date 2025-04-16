@@ -6,7 +6,7 @@ Shadcn/ui를 프로젝트에 설정하고, 기본 레이아웃 컴포넌트인 �
 
 ## 작업 목록
 
-1.  Shadcn/ui 초기화 및 기본 컴포넌트(Button, Input 등) 추가
+1.  Shadcn/ui 초기화 및 기본 컴포넌트(Button, Ipnput 등) 추가
 2.  메인 네비게이션 바 컴포넌트 구현 (Header) (#3.1)
 3.  푸터 컴포넌트 구현
 4.  기본 페이지 라우트 설정 (Home, Login, Signup 등) 
