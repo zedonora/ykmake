@@ -1,52 +1,7 @@
-# 작업 2: 메인 네비게이션 바 (Header) 컴포넌트 구현
-
-SiteLogo 컴포넌트를 구현하고 Header에 연결하겠습니다:
-
-1. 먼저 `app/components/layout/SiteLogo.tsx` 파일을 생성합니다:
-
-```bash
-touch app/components/layout/SiteLogo.tsx
-```
-
-2. SiteLogo 컴포넌트 코드를 만듭니다:
-
-```tsx
-import { Link } from "@remix-run/react";
-
-export function SiteLogo() {
-  return (
-    <Link to="/" className="ml-5 mr-6 flex items-center space-x-2">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="h-6 w-6 text-primary"
-      >
-        <path d="M12 2 L2 7 L12 12 L22 7 L12 2" />
-        <path d="M2 17 L12 22 L22 17" />
-        <path d="M2 12 L12 17 L22 12" />
-      </svg>
-      <span className="font-bold inline-block">YkMake</span>
-    </Link>
-  );
-}
-```
-
-`app/components/layout/Header.tsx` 파일을 생성하고 아래 내용을 추가합니다. (디렉토리가 없다면 생성해주세요.)
-```bash
-mkdir -p app/components/layout
-touch app/components/layout/Header.tsx
-```
-
-```typescript
 import { Link, NavLink } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
-import { SiteLogo } from "./SiteLogo"; // 로고 컴포넌트 (선택 사항)
+import { SiteLogo } from "./SiteLogo";
 
 export function Header() {
   // TODO: 사용자 로그인 상태 가져오기 (예: useLoaderData 또는 Context)
@@ -56,8 +11,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         {/* 로고 컴포넌트 사용 */}
-        <SiteLogo /> 
-        
+        <SiteLogo />
+
         <nav className="flex items-center space-x-6 text-sm font-medium flex-1">
           <NavLink
             to="/products"
@@ -95,7 +50,7 @@ export function Header() {
           >
             구인구직
           </NavLink>
-           <NavLink
+          <NavLink
             to="/teams"
             className={({ isActive }) => cn(
               "transition-colors hover:text-foreground/80",
@@ -104,15 +59,15 @@ export function Header() {
           >
             팀
           </NavLink>
-          {/* 추가 네비게이션 링크 */} 
+          {/* 추가 네비게이션 링크 */}
         </nav>
 
         <div className="flex items-center justify-end space-x-4">
           {isLoggedIn ? (
             <>
-              {/* TODO: 알림 아이콘 */} 
-              {/* TODO: 사용자 드롭다운 메뉴 (Avatar + DropdownMenu) */} 
-              <Button>로그아웃</Button> {/* 임시 */} 
+              {/* TODO: 알림 아이콘 */}
+              {/* TODO: 사용자 드롭다운 메뉴 (Avatar + DropdownMenu) */}
+              <Button>로그아웃</Button> {/* 임시 */}
             </>
           ) : (
             <>
@@ -129,4 +84,3 @@ export function Header() {
     </header>
   );
 }
-``` 

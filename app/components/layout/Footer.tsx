@@ -1,13 +1,3 @@
-# 작업 3: 푸터 (Footer) 컴포넌트 구현
-
-`app/components/layout/Footer.tsx` 파일을 생성하고 아래 내용을 추가합니다. (디렉토리가 없다면 생성해주세요.)
-
-
-```bash
-touch app/components/layout/Footer.tsx
-```
-
-```typescript
 import { Link } from "@remix-run/react";
 
 export function Footer() {
@@ -17,7 +7,7 @@ export function Footer() {
     <footer className="py-6 md:px-8 md:py-0 border-t">
       <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-          © {currentYear}{" "} 
+          © {currentYear}{" "}
           <Link to="/" className="font-medium underline underline-offset-4">
             YkMake
           </Link>
@@ -42,4 +32,3 @@ export function Footer() {
     </footer>
   );
 }
-``` 

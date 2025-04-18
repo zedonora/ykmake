@@ -20,7 +20,7 @@
     *   Tailwind CSS 설정
     *   `.env` 파일 설정 및 버전 관리(.gitignore)
 *   **Day 2: Shadcn/ui 설정 및 기본 네비게이션**
-    *   Shadcn/ui 초기화 및 기본 컴포넌트(Button, Ipnput 등) 추가
+    *   Shadcn/ui 초기화 및 기본 컴포넌트(Button, input 등) 추가
     *   메인 네비게이션 바 컴포넌트 구현 (Header) (#3.1)
     *   푸터 컴포넌트 구현
     *   기본 페이지 라우트 설정 (Home, Login, Signup 등)

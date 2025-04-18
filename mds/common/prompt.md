@@ -39,11 +39,16 @@
     *   최종 생성된 Markdown 파일의 맨 처음과 맨 끝에 ``` (백틱 3개)가 있는지 확인합니다.
     *   파일 내부의 모든 코드 블록은 !!! 형식을 준수하며, 올바른 indentation과 포맷이 유지되었는지 반드시 검증합니다.
 
+5. **package manager 정보**
+    *   pnpm을 사용
+
 ## 기타 지침
 
 *   모든 응답은 **한글**로 작성합니다.
 *   **항상 `mds/spec.md` 파일의 개발 계획을 최우선으로 참고하여 작업을 진행합니다.** 계획에 명시되지 않은 기능은 임의로 추가하지 않습니다.
 *   **UI/UX 디자인은 `mds/spec.md`에 명시된 데모 사이트 ([https://wemake.cool/](https://wemake.cool/))를 반드시 참고하여 최대한 유사하게 구현합니다.**
+*   **Shadcn UI의 기본 테마는 'rose'를 사용합니다.**
+*   **Shadcn UI 설치 및 컴포넌트 추가는 최신 명령어인 `pnpx shadcn@latest init` 또는 `pnpx shadcn@latest add [컴포넌트명]`을 사용합니다.**
 
 ## 프로젝트 폴더 구조 및 역할
 
@@ -63,9 +68,9 @@
         *   `dayX/N.md`: `jobs/dayX/N.md` 코드에 대한 상세 설명을 기록합니다. 
 
 ## cursor에서 모든 파일 수정    
-```text
+!!!text
 search : !!!
 replace : ```
 include : mds/**/*.md
 exclude : prompt.md
-```
+!!!
