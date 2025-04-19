@@ -1,11 +1,13 @@
-import { Link, NavLink } from "@remix-run/react";
+import { Form, Link, NavLink, useLoaderData } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import type { loader as rootLoader } from "~/root"; // 루트 로더 타입 임포트
 import { SiteLogo } from "./SiteLogo";
 
 export function Header() {
   // TODO: 사용자 로그인 상태 가져오기 (예: useLoaderData 또는 Context)
-  const isLoggedIn = false; // 임시 값
+  const { session } = useLoaderData<typeof rootLoader>(); // 루트 로더에서 session 가져오기
+  const isLoggedIn = !!session; // session이 있으면 true, 없으면 false
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -65,9 +67,14 @@ export function Header() {
         <div className="flex items-center justify-end space-x-4">
           {isLoggedIn ? (
             <>
-              {/* TODO: 알림 아이콘 */}
-              {/* TODO: 사용자 드롭다운 메뉴 (Avatar + DropdownMenu) */}
-              <Button>로그아웃</Button> {/* 임시 */}
+              {/* TODO: 사용자 아바타 및 드롭다운 메뉴 추가 */}
+              <span className="text-sm text-muted-foreground">
+                {session.user.email} {/* 이메일 표시 (임시) */}
+              </span>
+              {/* 로그아웃 버튼을 Form 안에 배치 */}
+              <Form action="/logout" method="post">
+                <Button type="submit" variant="ghost">로그아웃</Button>
+              </Form>
             </>
           ) : (
             <>

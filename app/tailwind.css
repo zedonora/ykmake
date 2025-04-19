@@ -1,91 +1,172 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+/* Tailwind v4 기본 import */
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+/* shadcn/ui CSS 변수 정의 (hsl() 래퍼 추가, @layer 밖으로 이동) */
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(240 10% 3.9%);
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 3.9%);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 3.9%);
 
-    --primary: 346.8 77.2% 49.8%;
-    --primary-foreground: 355.7 100% 97.3%;
+  --primary: hsl(346.8 77.2% 49.8%);
+  --primary-foreground: hsl(355.7 100% 97.3%);
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+  --secondary: hsl(240 4.8% 95.9%);
+  --secondary-foreground: hsl(240 5.9% 10%);
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%);
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+  --accent: hsl(240 4.8% 95.9%);
+  --accent-foreground: hsl(240 5.9% 10%);
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 346.8 77.2% 49.8%;
+  --border: hsl(240 5.9% 90%);
+  --input: hsl(240 5.9% 90%);
+  --ring: hsl(346.8 77.2% 49.8%);
 
-    --radius: 0.5rem;
+  --radius: 0.5rem;
 
-    /* 차트 색상 변수 추가 */
-    --chart-1: 346.8 77.2% 49.8%;
-    --chart-2: 50 98% 60%;
-    --chart-3: 210 100% 60%;
-    --chart-4: 120 100% 30%;
-    --chart-5: 290 100% 40%;
-  }
-
-  .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 0 0% 95%;
-
-    --card: 24 9.8% 10%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 346.8 77.2% 49.8%;
-    --primary-foreground: 355.7 100% 97.3%;
-
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 346.8 77.2% 49.8%;
-
-    /* 차트 색상 다크 모드 변수 */
-    --chart-1: 346.8 77.2% 59.8%;
-    --chart-2: 50 98% 70%;
-    --chart-3: 210 100% 70%;
-    --chart-4: 120 100% 40%;
-    --chart-5: 290 100% 50%;
-  }
+  /* 차트 색상 변수 추가 */
+  --chart-1: hsl(346.8 77.2% 49.8%);
+  --chart-2: hsl(50 98% 60%);
+  --chart-3: hsl(210 100% 60%);
+  --chart-4: hsl(120 100% 30%);
+  --chart-5: hsl(290 100% 40%);
 }
 
+.dark {
+  --background: hsl(20 14.3% 4.1%);
+  --foreground: hsl(0 0% 95%);
+
+  --card: hsl(24 9.8% 10%);
+  --card-foreground: hsl(0 0% 95%);
+
+  --popover: hsl(0 0% 9%);
+  --popover-foreground: hsl(0 0% 95%);
+
+  --primary: hsl(346.8 77.2% 49.8%);
+  --primary-foreground: hsl(355.7 100% 97.3%);
+
+  --secondary: hsl(240 3.7% 15.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+
+  --muted: hsl(0 0% 15%);
+  --muted-foreground: hsl(240 5% 64.9%);
+
+  --accent: hsl(12 6.5% 15.1%);
+  --accent-foreground: hsl(0 0% 98%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 85.7% 97.3%);
+
+  --border: hsl(240 3.7% 15.9%);
+  --input: hsl(240 3.7% 15.9%);
+  --ring: hsl(346.8 77.2% 49.8%);
+
+  /* 차트 색상 다크 모드 변수 */
+  --chart-1: hsl(346.8 77.2% 59.8%);
+  --chart-2: hsl(50 98% 70%);
+  --chart-3: hsl(210 100% 70%);
+  --chart-4: hsl(120 100% 40%);
+  --chart-5: hsl(290 100% 50%);
+}
+
+/* Tailwind v4 테마 설정 */
+@theme inline {
+  /* 'inline' 옵션 추가 */
+  /* 색상 매핑 (hsl() 제거) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  /* hsl() 제거 */
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-transparent: transparent;
+  /* 추가 */
+
+  /* Radius 설정 */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Font 설정 (tailwind.config.ts에서 가져옴) */
+  --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  /* Keyframes & Animation 설정 (tailwind.config.ts에서 가져옴) */
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+/* Tailwind 레이어 */
 @layer base {
   * {
-    @apply border-border;
+    /* border-border 대신 CSS 변수를 직접 사용하도록 수정 */
+    @apply border-[var(--border)] outline-[var(--ring)]/50;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    /* 기본 폰트 적용 */
   }
+
+  /* 버튼 커서 기본값 복원 (v4 권장) */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* 컴포넌트 관련 스타일 (필요 시 추가) */
+}
+
+@layer utilities {
+  /* 유틸리티 관련 스타일 (필요 시 추가) */
 }

@@ -8,6 +8,7 @@ import {
 } from "@remix-run/react";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node"; // or cloudflare/deno
 import invariant from "tiny-invariant";
+import { createSupabaseServerClient } from "~/lib/supabase.server"; // 서버 클라이언트 헬퍼 임포트
 
 import stylesheet from "~/tailwind.css?url"; // Tailwind CSS 가져오기
 import { Header } from "~/components/layout/Header"; // Header 컴포넌트 가져오기 (경로 확인 필요)
@@ -19,21 +20,21 @@ import { useTheme } from "next-themes";
 
 // 1. loader 함수 정의 또는 수정
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  // 서버 환경 변수 읽기
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-  // 환경 변수 존재 확인
-  invariant(supabaseUrl, "SUPABASE_URL is not set");
-  invariant(supabaseAnonKey, "SUPABASE_ANON_KEY is not set");
-
-  // 공개해도 안전한 환경 변수들을 객체로 묶어 반환
   const env = {
-    SUPABASE_URL: supabaseUrl,
-    SUPABASE_ANON_KEY: supabaseAnonKey,
+    SUPABASE_URL: process.env.SUPABASE_URL!,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
   };
+  invariant(env.SUPABASE_URL, "SUPABASE_URL is not set");
+  invariant(env.SUPABASE_ANON_KEY, "SUPABASE_ANON_KEY is not set");
 
-  return Response.json({ env }); // env 객체를 json으로 반환
+  // await를 사용하여 비동기 함수 결과를 기다리고, 객체 구조 분해
+  const { supabase, headers } = await createSupabaseServerClient(request);
+
+  // 현재 세션 정보 가져오기
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // env와 session 정보를 함께 반환하고, 응답 헤더에 headers 객체 포함
+  return Response.json({ env, session }, { headers: headers });
 };
 
 export const links: LinksFunction = () => [
@@ -42,7 +43,7 @@ export const links: LinksFunction = () => [
 
 export default function AppWithProviders() {
   // 2. useLoaderData 훅으로 env 객체 가져오기
-  const { env } = useLoaderData<typeof loader>();
+  const { env, session } = useLoaderData<typeof loader>(); // session 정보도 받음
   const { theme } = useTheme();
   return (
     <html lang="ko" className={clsx(theme)} suppressHydrationWarning>
@@ -54,6 +55,8 @@ export default function AppWithProviders() {
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {/* Header 컴포넌트는 이제 useLoaderData를 통해 직접 session 접근 가능 */}
+          {session && <div>로그인 상태: {session.user.email}</div>}
           <Header />
           {/* 테마 토글 버튼 추가 */}
           <div className="fixed top-2 right-4 z-50">
@@ -75,6 +78,14 @@ export default function AppWithProviders() {
             __html: `window.ENV = ${JSON.stringify(env)}`,
           }}
         />
+        {/* 클라이언트 측에서 세션 변화 감지를 위해 access_token 전달 (선택적, 필요 시) */}
+        {/* session?.access_token && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.ACCESS_TOKEN = "${session.access_token}"`,
+            }}
+          />
+        ) */}
         <Scripts />
       </body>
     </html>
