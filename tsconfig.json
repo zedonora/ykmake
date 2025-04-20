@@ -14,8 +14,7 @@
       "ES2022"
     ],
     "types": [
-      "@remix-run/node",
-      "vite/client"
+      "@remix-run/node"
     ],
     "isolatedModules": true,
     "esModuleInterop": true,
