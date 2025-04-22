@@ -3,6 +3,7 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import type { loader as rootLoader } from "~/root"; // 루트 로더 타입 임포트
 import { SiteLogo } from "./SiteLogo";
+import { ThemeToggle } from "~/components/theme-toggle";
 
 export function Header() {
   // TODO: 사용자 로그인 상태 가져오기 (예: useLoaderData 또는 Context)
@@ -86,6 +87,7 @@ export function Header() {
               </Button>
             </>
           )}
+          <ThemeToggle />
         </div>
       </div>
     </header>

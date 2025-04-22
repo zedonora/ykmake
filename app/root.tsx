@@ -1,5 +1,6 @@
 import {
   Links,
+  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -20,6 +21,7 @@ import {
   useTheme,
 } from "remix-themes"; // remix-themes 관련 임포트
 import clsx from "clsx";
+import { isDevelopment } from "./constant";
 
 // 1. loader 함수에서 테마 정보 로드 추가
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -50,36 +52,28 @@ function App() {
   const [theme] = useTheme(); // remix-themes의 useTheme 사용
 
   return (
-    <html lang="ko" className={clsx(theme)}> {/* html 태그에 theme 적용 */}
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <PreventFlashOnWrongTheme ssrTheme={Boolean(data.theme)} /> {/* FOUC 방지 */}
-        <Links />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased"> {/* body 태그에서 flex 제거 */}
-        <div className="relative flex min-h-screen flex-col"> {/* 전체 레이아웃 div */}
-          <Header /> {/* Header는 session을 내부적으로 받거나 prop으로 받을 수 있음 */}
-          {/* session 정보 표시 (예시, Header 내부로 이동 가능) */}
-          {/* {data.session && <div>로그인 상태: {data.session.user.email}</div>} */}
-          <main className="flex-1"> {/* 메인 컨텐츠 영역 flex-1 -> flex-grow로 변경해도 무방 */}
+    <html lang="ko" className={clsx(theme)}><head>
+      <PreventFlashOnWrongTheme ssrTheme={Boolean(data.theme)} />
+      <meta charSet="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <Meta />
+      <Links />
+    </head><body className="min-h-screen bg-background font-sans antialiased">
+        <div className="relative flex min-h-screen flex-col">
+          <Header />
+          <main className="flex-1">
             <Outlet />
           </main>
           <Footer />
         </div>
         <ScrollRestoration />
-        {/* Scripts 컴포넌트에 env 객체 주입 */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.ENV = ${JSON.stringify(data.env)}`,
           }}
         />
         <Scripts />
-        {/* LiveReload는 개발 환경에서만 필요 */}
-        {/* <LiveReload /> */}
-      </body>
-    </html>
+      </body></html>
   );
 }
 
