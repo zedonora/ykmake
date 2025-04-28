@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useRevalidator
 } from "@remix-run/react";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node"; // or cloudflare/deno
 import invariant from "tiny-invariant";
@@ -73,6 +74,7 @@ function App() {
           }}
         />
         <Scripts />
+        {isDevelopment() && <LiveReload />}
       </body></html>
   );
 }
