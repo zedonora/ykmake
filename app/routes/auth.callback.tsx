@@ -15,7 +15,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     if (!error) {
       // 성공 시, 사용자를 원래 의도했던 페이지 또는 기본 페이지로 리디렉션
-      // exchangeCodeForSession이 성공하면 필요한 쿠키가 자동으로 설정됨
       return redirect(next, { headers });
     } else {
       console.error("Session exchange error:", error);

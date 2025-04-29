@@ -11,6 +11,7 @@ import {
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node"; // or cloudflare/deno
 import invariant from "tiny-invariant";
 import { createSupabaseServerClient } from "~/lib/supabase.server"; // 서버 클라이언트 헬퍼 임포트
+import { ensureUserProfileExists } from "~/lib/profile.server"; // <<<--- 프로필 유틸리티 함수 임포트
 
 import stylesheet from "~/tailwind.css?url"; // Tailwind CSS 가져오기
 import { Header } from "~/components/layout/Header"; // Header 컴포넌트 가져오기
@@ -24,7 +25,7 @@ import {
 import clsx from "clsx";
 import { isDevelopment } from "./constant";
 
-// 1. loader 함수에서 테마 정보 로드 추가
+// 1. loader 함수에서 테마 정보 로드 및 프로필 생성 로직 추가
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { getTheme } = await themeSessionResolver(request); // 테마 리졸버 사용
   const theme = getTheme(); // 현재 테마 가져오기
@@ -37,10 +38,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   invariant(env.SUPABASE_ANON_KEY, "SUPABASE_ANON_KEY is not set");
 
   const { supabase, headers } = await createSupabaseServerClient(request);
+  // 세션 정보는 UI 렌더링 등을 위해 먼저 가져옵니다.
   const { data: { session } } = await supabase.auth.getSession();
 
-  // env, session, theme 정보를 함께 반환하고, 응답 헤더에 headers 객체 포함
-  return Response.json({ env, session, theme }, { headers: headers }); // theme 추가
+  // --- 프로필 자동 생성 로직 (별도 함수 호출) ---
+  try {
+    const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+
+    if (userError && userError.message !== 'Auth session missing!') {
+      console.error("Error fetching authenticated user:", userError);
+    } else if (authUser) {
+      // 분리된 함수 호출
+      await ensureUserProfileExists(supabase, authUser);
+    }
+  } catch (e) {
+    console.error("Error during profile auto-creation process in root loader:", e);
+  }
+  // --- 프로필 자동 생성 로직 끝 ---
+
+  // loader는 env, session(getSession 결과), theme 정보를 반환
+  // UI 렌더링 시점에는 getSession의 session 정보를 사용하는 것이 일반적입니다.
+  // 프로필 생성은 백그라운드 작업으로 간주합니다.
+  return Response.json({ env, session, theme }, { headers: headers });
 };
 
 export const links: LinksFunction = () => [

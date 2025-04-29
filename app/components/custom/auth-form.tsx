@@ -122,9 +122,13 @@ export function AuthForm({ type, error, pending }: AuthFormProps) {
             <Button variant="outline" className="w-full">
               <MessageCircle className="mr-2 h-4 w-4" /> Kakao Talk
             </Button>
-            <Button variant="outline" className="w-full">
-              <Github className="mr-2 h-4 w-4" /> Github
-            </Button>
+            {/* Github 로그인 버튼 */}
+            <Form method="post" action="/auth/github">
+              {/* CSRF 토큰 등 필요한 hidden input이 있다면 추가 */}
+              <Button type="submit" variant="outline" className="w-full">
+                <Github className="mr-2 h-4 w-4" /> Github으로 계속하기
+              </Button>
+            </Form>
             <Button variant="outline" className="w-full">
               <KeyRound className="mr-2 h-4 w-4" /> OTP
             </Button>

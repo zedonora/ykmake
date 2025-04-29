@@ -4,7 +4,6 @@ import { createSupabaseServerClient } from "~/lib/supabase.server"; // Supabase 
 
 export async function action({ request }: ActionFunctionArgs) {
   const { supabase, headers } = await createSupabaseServerClient(request);
-
   // Github OAuth 로그인 시작
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
@@ -15,7 +14,6 @@ export async function action({ request }: ActionFunctionArgs) {
       redirectTo: `${process.env.BASE_URL}/auth/callback`, // Supabase가 처리 후 여기로 최종 리디렉션
     },
   });
-
   if (error) {
     console.error("Github OAuth Error:", error);
     // 사용자에게 에러 메시지를 보여주는 페이지로 리디렉션하거나 에러 처리
