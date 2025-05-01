@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, uuid, text, timestamp, bigserial, pgSchema, boolean, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, uuid, text, timestamp, bigserial, pgSchema, boolean, jsonb, uniqueIndex, index, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 // Supabase auth 스키마 정의
@@ -53,11 +53,31 @@ export const communityPosts = pgTable("community_posts", {
   title: text("title").notNull(),
   content: text("content"),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  upvotes: integer("upvotes").default(0).notNull(),
 });
 
 // CommunityPosts 타입 추론
 export type CommunityPost = typeof communityPosts.$inferSelect;
 export type NewCommunityPost = typeof communityPosts.$inferInsert;
+
+// --- ideasGpt 테이블 ---
+export const ideasGpt = pgTable('ideas_gpt', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  category: varchar('category', { length: 50 }), // 예시 카테고리 필드
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'set null' }), // 작성자 정보, 삭제 시 NULL 설정
+  createdAt: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ([
+  // 필요에 따라 인덱스 추가 (예: 카테고리, 사용자 ID 기준 조회 성능 향상)
+  index("ideas_category_idx").on(table.category),
+  index("ideas_user_idx").on(table.userId),
+]));
+
+// 필요한 타입 export
+export type IdeaGpt = typeof ideasGpt.$inferSelect;
+export type NewIdeaGpt = typeof ideasGpt.$inferInsert;
 
 // --- jobs 테이블: auth.users 참조 ---
 export const jobs = pgTable('jobs', {
