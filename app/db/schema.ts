@@ -82,21 +82,29 @@ export type NewIdeaGpt = typeof ideasGpt.$inferInsert;
 // --- jobs 테이블: auth.users 참조 ---
 export const jobs = pgTable('jobs', {
   id: serial('id').primaryKey(),
-  // userId 타입을 integer에서 uuid로 변경하여 users.id 타입과 일치시킴
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // auth.users 테이블 외래키
-  title: varchar('title', { length: 255 }).notNull(),
-  description: text('description').notNull(),
-  company: varchar('company', { length: 100 }),
-  location: varchar('location', { length: 100 }),
-  url: varchar('url', { length: 255 }),
-  category: varchar('category', { length: 50 }), // 카테고리 필드 (예시)
+  position: varchar('position', { length: 255 }).notNull(), // 기존 title 대체 또는 병기
+  overview: text('overview').notNull(), // 기존 description 대체 또는 병기
+  responsibilities: text('responsibilities'), // (400 chars max, comma separated)
+  qualifications: text('qualifications'), // (400 chars max, comma separated)
+  benefits: text('benefits'), // (400 chars max, comma separated)
+  skills: text('skills'), // (400 chars max, comma separated)
+  companyName: varchar('company_name', { length: 100 }), // 기존 company 대체 또는 병기
+  companyLogoUrl: text('company_logo_url'),
+  companyLocation: varchar('company_location', { length: 100 }), // 기존 location 대체 또는 병기
+  applyUrl: varchar('apply_url', { length: 255 }), // 기존 url 대체 또는 병기
+  jobType: varchar('job_type', { length: 50 }), // 예: Full-Time, Part-Time, Freelance, Internship
+  jobLocationType: varchar('job_location_type', { length: 50 }), // 예: Remote, In-Person, Hybrid
+  salaryRange: varchar('salary_range', { length: 50 }), // 예: $0 - $50,000
+  status: varchar('status', { length: 20 }).default('Open'), // 예: Open, Closed
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(), // 수정 시간을 위한 필드 추가 권장
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
-  // category 및 createdAt 인덱스 (SQL 내용 반영)
-  index('idx_jobs_category').on(table.category),
+  // 기존 인덱스 유지 및 필요시 새 인덱스 추가
+  index('idx_jobs_job_type').on(table.jobType),
+  index('idx_jobs_job_location_type').on(table.jobLocationType),
+  index('idx_jobs_salary_range').on(table.salaryRange),
   index('idx_jobs_created_at').on(table.createdAt),
-  // userId 컬럼 인덱스 추가 (SQL 내용 반영 및 권장)
   index('idx_jobs_user_id').on(table.userId),
 ]);
 

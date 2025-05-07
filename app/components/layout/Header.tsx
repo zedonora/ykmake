@@ -81,18 +81,28 @@ export function Header() {
                 </NavLink>
               </NavigationMenuItem>
 
-              {/* 구인구직 메뉴 (단순 링크 예시) */}
+              {/* 구인구직 메뉴 (드롭다운으로 변경) */}
               <NavigationMenuItem>
-                <NavLink
-                  to="/jobs"
-                  className={({ isActive }) => cn(
-                    navigationMenuTriggerStyle(),
-                    "transition-colors hover:text-foreground/80",
-                    isActive ? "text-foreground" : "text-foreground/60"
-                  )}
-                >
-                  구인구직
-                </NavLink>
+                <NavigationMenuTrigger>구인구직</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid grid-cols-2 gap-3 p-4 md:w-[450px] lg:w-[500px]">
+                    <ListItem href="/jobs?type=remote" title="Remote Jobs">
+                      Find a remote job in our community
+                    </ListItem>
+                    <ListItem href="/jobs?type=full-time" title="Full-Time Jobs">
+                      Find a full-time job in our community
+                    </ListItem>
+                    <ListItem href="/jobs?type=freelance" title="Freelance Jobs">
+                      Find a freelance job in our community
+                    </ListItem>
+                    <ListItem href="/jobs?type=internship" title="Internships">
+                      Find an internship in our community
+                    </ListItem>
+                    <ListItem href="/jobs/new" title="Post a Job">
+                      Post a job to our community
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
               </NavigationMenuItem>
 
               {/* 팀 메뉴 (단순 링크 예시) */}

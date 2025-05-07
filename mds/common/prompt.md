@@ -33,9 +33,9 @@
     - **데이터베이스 작업:** `postgres-js` 드라이버와 연동된 **Drizzle ORM 클라이언트 (`db`)** 를 사용하여 데이터 조회(`select`, `query`), 생성(`insert`), 수정(`update`), 삭제(`delete`) 작업을 수행합니다. 가능하면 ORM에서 추론된 타입을 활용합니다.
     - **유효성 검사:**
         - **서버 측 (`loader`, `action`):** 함수 내에서 **폼 데이터 또는 파라미터 유효성 검사는 Zod**를 사용하여 처리합니다.
-        - **클라이언트 측:**
-            - 클라이언트 측 유효성 검사가 필요한 경우, **`app/lib/schemas/` 디렉토리를 생성**하고, 그 안에 **Zod 스키마 파일(`.client.ts`)**을 정의하여 사용합니다.
-            - 예시: `app/lib/schemas/auth.client.ts`
+        - **클라이언트 측 (및 서버 측 공유 스키마):**
+            - **`app/lib/schemas/` 디렉토리를 생성**하고, 그 안에 **Zod 스키마 파일 (예: `[feature].schema.ts` 또는 `[feature].server.ts`, `[feature].client.ts`)**을 정의하여 사용합니다. 이렇게 분리하면 서버와 클라이언트 간 스키마 공유, 스키마 재사용성 및 테스트 용이성이 향상됩니다.
+            - 예시: `app/lib/schemas/auth.schema.ts`, `app/lib/schemas/job.schema.ts`
 - **라우팅:** Flat 경로명을 사용하며, 레이아웃은 Remix의 표준 방식 (`_layout.tsx`)을 따릅니다. 재사용 UI 레이아웃은 `app/components/layouts/`에 작성합니다.
 - **UI:**
     - **Shadcn UI**를 사용하며, 기본 테마는 **'rose'**를 적용합니다.
